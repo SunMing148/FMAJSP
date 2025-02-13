@@ -1,8 +1,8 @@
 class Job:
     def __init__(self, Job_index, Operation_num):
         """
-        :param Job_index: 工件序号
-        :param Operation_num: 工序数
+        :param Job_index: 工件序号          这两个参数实际上是J字典的k和v
+        :param Operation_num: 工序数       不是总工序数，而是当前工件的工序数
         """
         self.Job_index = Job_index
         self.Operation_num = Operation_num
@@ -27,7 +27,9 @@ class Job:
         """
         self.Last_Processing_Machine = Machine
         self.Last_Processing_end_time = End_time
+
         self.Processed.append(1)
+
         self.J_start.append(W_Eailiest)
         self.J_end.append(End_time)
         self.J_machine.append(Machine)

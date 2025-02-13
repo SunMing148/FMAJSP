@@ -17,9 +17,9 @@ class Encode:
         self.J_num = J_num
         self.M_num = M_num
         self.CHS = []
-        self.GS_num = int(0.6 * Pop_size)  # 全局选择初始化
-        self.LS_num = int(0.2 * Pop_size)  # 局部选择初始化
-        self.RS_num = int(0.2 * Pop_size)  # 随机选择初始化
+        self.GS_num = int(0.3 * Pop_size)  # 全局选择初始化
+        self.LS_num = int(0.3 * Pop_size)  # 局部选择初始化
+        self.RS_num = int(0.4 * Pop_size)  # 随机选择初始化
         self.Len_Chromo = 0
         for i in J.values():
             self.Len_Chromo += i

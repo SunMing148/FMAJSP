@@ -4,7 +4,7 @@ class Machine_Time_window:
         :param Machine_index: 加工机器序号
         """
         self.Machine_index = Machine_index
-        self.assigned_task = []  # 机器分配的任务记录，包括工件序号以及工序序号
+        self.assigned_task = []  # 机器分配的任务记录，包括工件序号以及工序序号  [[工件序号,工序序号],[工件序号,工序序号],···]
         self.O_start = []  # 各任务工序的开始时间记录
         self.O_end = []  # 各任务工序的结束时间记录
         self.End_time = 0

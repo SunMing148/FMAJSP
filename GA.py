@@ -4,12 +4,12 @@ import random
 import numpy as np
 
 from Decode import Decode
-from Instance import *
+from Instance_2 import *
 
 
 class GA():
     def __init__(self):
-        self.Pop_size = 400  # 种群数量
+        self.Pop_size = 100  # 种群数量
         self.Pc = 0.8  # 交叉概率
         self.Pm = 0.3  # 变异概率
         self.Pv = 0.5  # 选择何种方式进行交叉的概率阈值
@@ -149,3 +149,13 @@ class GA():
             d = Decode(J, O, M_num)
             Fit.append(d.decode(CHS, T0))
         return A_CHS[Fit.index(min(Fit))]
+
+    def Select(self,Fit_value):
+        Fit=[]
+        for i in range(len(Fit_value)):
+            fit=1/Fit_value[i]
+            Fit.append(fit)
+        Fit=np.array(Fit)
+        idx = np.random.choice(np.arange(len(Fit_value)), size=len(Fit_value), replace=True,
+                               p=(Fit) / (Fit.sum()))
+        return idx
