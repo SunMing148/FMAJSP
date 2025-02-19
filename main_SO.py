@@ -1,0 +1,283 @@
+import math
+import random
+
+import matplotlib.pyplot as plt
+import numpy as np
+from Encode import Encode
+from SO import SO
+from Instance_2 import *
+
+
+
+def generate_color_map():
+    # 定义色系与对应的工件ID
+    job_groups = {
+        'Reds': [1, 2, 3],
+        'Blues': [10, 11, 12],
+        'Greens': [19, 20, 21],
+        'Oranges': [4, 5, 13, 14, 6, 15],
+        'Purples': [22, 23, 24],
+        'YlOrBr': [7, 8, 9, 16, 17, 18],
+        'PuBu': [25, 26, 27]
+    }
+
+    # 创建颜色映射表
+    color_map = {}
+
+    # 遍历每个色系及其对应的工件ID
+    for colormap_name, jobs in job_groups.items():
+        # 获取对应组的颜色映射
+        cmap = plt.get_cmap(colormap_name)
+
+        # 分配颜色给每个工件，保证同组内有差异但属于同一个色系
+        for i, job_id in enumerate(jobs):
+            # 使用颜色映射的前80%颜色，避免最浅和最深的颜色
+            # 这里使用了线性插值来确保颜色分布在色带的中间部分
+            color = cmap(i / (len(jobs) - 1) * 0.4 + 0.3)
+            color_map[job_id] = color
+
+    return color_map
+
+#v3
+def Gantt(Machines):
+    # color_map = {
+    #     # 红色系 - 第一组机器
+    #     1: 'darkred', 2: 'firebrick', 3: 'indianred',
+    #     10: 'brown', 11: 'salmon', 12: 'lightsalmon',
+    #     19: 'tomato', 20: 'coral', 21: 'orangered',
+    #
+    #     # 蓝色系 - 第二组机器
+    #     4: 'navy', 5: 'midnightblue', 6: 'darkblue',
+    #     13: 'mediumblue', 14: 'royalblue', 15: 'cornflowerblue',
+    #     22: 'steelblue', 23: 'deepskyblue', 24: 'dodgerblue',
+    #
+    #     # 绿色系 - 第三组机器
+    #     7: 'darkgreen', 8: 'forestgreen', 9: 'seagreen',
+    #     16: 'mediumseagreen', 17: 'limegreen', 18: 'springgreen',
+    #     25: 'mediumspringgreen', 26: 'aquamarine', 27: 'turquoise'
+    # }
+
+    # color_map = {
+    #     # 红色系
+    #     1: 'darkred', 2: 'firebrick', 3: 'indianred',
+    #     # 蓝色系
+    #     10: 'navy', 11: 'royalblue', 12: 'cornflowerblue',
+    #     # 绿色系
+    #     19: 'darkgreen', 20: 'forestgreen', 21: 'seagreen',
+    #     # 紫色系 (用于ID 4, 5, 13, 14, 6, 15)
+    #     4: 'purple', 5: 'darkviolet', 6: 'mediumorchid',
+    #     13: 'plum', 14: 'rebeccapurple', 15: 'mediumpurple',
+    #     # 橙色系 (用于ID 22, 23, 24)
+    #     22: 'orange', 23: 'darkorange', 24: 'coral',
+    #     # 青色系 (用于ID 7, 8, 9, 16, 17, 18)
+    #     7: 'teal', 8: 'aqua', 9: 'cyan',
+    #     16: 'lightseagreen', 17: 'mediumturquoise', 18: 'paleturquoise',
+    #     # 黄色系 (用于ID 25, 26, 27)
+    #     25: 'gold', 26: 'yellow', 27: 'khaki'
+    # }
+
+    color_map = generate_color_map()
+
+    # 设置画布大小
+    plt.figure(figsize=(10, 6), dpi=300)
+
+    group_spacing = 2  # 组之间的间距
+    # machine_offset = {1: 0, 15: group_spacing, 22: group_spacing}
+    machine_offset = {1: 0, 15: group_spacing, 18: 0.3, 21: 0.3,22: group_spacing}
+
+
+    for machine_index, Machine in enumerate(Machines):
+        start_times = Machine.O_start
+        end_times = Machine.O_end
+
+        # 计算当前机器的实际绘图位置
+        machine_id = machine_index + 1
+        adjusted_index = machine_index + sum([offset for key, offset in machine_offset.items() if machine_id >= key])
+
+        for task_index, (start, end) in enumerate(zip(start_times, end_times)):
+            job_serial_number = Machine.assigned_task[task_index][0]
+            # job_operation_num = Machine.assigned_task[task_index][1]
+            color = color_map.get(job_serial_number, 'gray')
+
+            if job_serial_number in (1, 2, 3):
+                b = f"{job_serial_number}A"
+            elif job_serial_number in (10, 11, 12):
+                b = f"{job_serial_number}B"
+            elif job_serial_number in (19, 20, 21):
+                b = f"{job_serial_number}C"
+            elif job_serial_number in (4, 5, 13, 14, 6, 15):
+                b = f"{job_serial_number}D"
+            elif job_serial_number in (22, 23, 24):
+                b = f"{job_serial_number}E"
+            elif job_serial_number in (7, 8, 9, 16, 17, 18):
+                b = f"{job_serial_number}F"
+            elif job_serial_number in (25, 26, 27):
+                b = f"{job_serial_number}G"
+
+            # 绘制甘特条
+            plt.barh(adjusted_index, width=end - start, height=0.8, left=start,
+                     color=color, edgecolor='black')
+            # 在甘特条中间添加任务ID
+
+            # plt.text(x=start + (end - start) / 2, y=adjusted_index,
+            #          s=str(job_serial_number), va='center', ha='center')
+            plt.text(x=start + (end - start) / 2, y=adjusted_index,
+                     s=b, va='center', ha='center')
+
+    # 设置Y轴刻度标签
+    yticks = []
+    yticklabels = []
+    for i, machine in enumerate(Machines, start=1):
+        adjusted_index = i - 1 + sum([offset for key, offset in machine_offset.items() if i >= key])
+        yticks.append(adjusted_index)
+        yticklabels.append('{}'.format(i))
+
+    plt.yticks(yticks, yticklabels)
+
+    # 添加组标签
+    group_labels = {
+        'Proxima Sensor Line': (0 + 14) / 2 - 0.5,  # 第一组中间位置
+        'Mechanism Line': (15 + 21) / 2 - 1 + group_spacing +0.4,  # 第二组中间位置，考虑偏移
+        'Arc Chute Line': (22 + 25) / 2 + 1  + group_spacing +0.8  # 第三组中间位置，考虑偏移
+    }
+
+    # 绘制组标签
+    for label, position in group_labels.items():
+        plt.text(-0.3, position, label, fontsize=8, rotation=90, va='center', ha='right')
+
+    # 添加标题和坐标轴标签
+    plt.title('Scheduling Gantt chart')
+    plt.ylabel('Machines', labelpad=20)
+    plt.xlabel('Time(min)')
+    # 保存并显示图像
+    plt.tight_layout()
+    plt.savefig('优化后排程方案的甘特图.png', bbox_inches='tight')
+    plt.show()
+
+
+
+
+if __name__ == '__main__':
+    Optimal_fit = 9999  # 最佳适应度（初始化）
+    Optimal_CHS = None  # 最佳适应度对应的基因个体（初始化）
+
+    e = Encode(Processing_time, J, J_num, M_num)
+    e.Get_Map_base_value()
+    s = SO(e.Len_Chromo)
+    X = s.SO_initial()
+    
+    Best_fit = []  # 记录适应度在迭代过程中的变化，便于绘图
+    
+    Fit = s.fitness(e, X, J, Processing_time, M_num, O_num)
+
+    # 计算出全局最佳适应度, 因为这个是第一次进行操作，不用和别的进行对比
+    g_best = np.argmin(Fit)
+    gy_best = Fit[g_best]
+    Best_fit.append(gy_best)
+
+    # 得到食物的位置，其实就是当前全局最佳适应度的位置
+    food = X[g_best, :]
+
+    # 将种群进行分离,一半归为雌性，一半归为雄性
+    male_number = int(np.round(s.Pop_size / 2))
+    female_number = s.Pop_size - male_number
+    male = X[0:male_number, :]
+    female = X[male_number:, :]
+    # 从总的适应度中分离出雄性的适应度
+    male_individual_fitness = Fit[0:male_number]
+    # 从总的适应度中分理处雌性的适应度
+    female_individual_fitness = Fit[male_number:]
+
+    # 计算雄性种群中的个体最佳
+    male_fitness_best_index = np.argmin(male_individual_fitness)
+    male_fitness_best_value = male_individual_fitness[male_fitness_best_index]
+    # 雄性中最优个体
+    male_best_fitness_individual = male[male_fitness_best_index, :]
+    # 计算雌性种群中的个体最佳
+    female_fitness_best_index = np.argmin(female_individual_fitness)
+    female_fitness_best_value = female_individual_fitness[female_fitness_best_index]
+    # 雌性中最优个体
+    female_best_fitness_individual = female[male_fitness_best_index, :]
+
+    # 更新位置之后的male
+    new_male = np.matrix(np.zeros((male_number, e.Len_Chromo * 2)))
+    # 更新位置之后的female
+    new_female = np.matrix(np.zeros((female_number, e.Len_Chromo * 2)))
+
+
+
+    # 迭代
+    for t in range(s.Max_Itertions):
+        print("iter_{}".format(t))
+        # 计算温度
+        temp = math.exp(-(t / s.Max_Itertions))
+        # 计算食物的质量
+        quantity = s.C1 * math.exp((t - s.Max_Itertions) / s.Max_Itertions)
+        if quantity > 1:
+            quantity = 1
+        # 先判断食物的质量是不是超过了阈值
+        if quantity < s.food_threshold:
+            # 如果当前是没有食物的就寻找食物
+            new_male, new_female = s.ExplorationPhaseNoFood(male_number, male, male_individual_fitness, new_male, female_number, female, female_individual_fitness, new_female)
+        else:
+            # 当前有食物开始进入探索阶段
+            # 先判断当前的温度是冷还是热
+            if temp > s.temp_threshold:  # 表示当前是热的
+                # 热了就不进行交配，开始向食物的位置进行移动
+                # 雄性先移动
+                new_male, new_female = s.ExplorationPhaseFoodExists(food, temp, male_number, male, new_male, female_number, female, new_female)
+            else:
+                # 如果当前的温度是比较的冷的，就比较适合战斗和交配
+                # 生成一个随机值来决定是要战斗还是要交配
+                model = random.random()
+                if model < s.model_threshold:
+                    # 当前进入战斗模式
+                    new_male, new_female = s.fight(quantity, male, male_number, male_individual_fitness, male_fitness_best_value,
+                              male_best_fitness_individual, new_male, female, female_number, female_individual_fitness,
+                              female_fitness_best_value, female_best_fitness_individual, new_female)
+                else:
+                    # 当前将进入交配模式
+                    new_male, new_female = s.mating(quantity, male, male_number, male_individual_fitness, new_male, female,
+                               female_number, female_individual_fitness, new_female)
+
+        # 将更新后的位置进行处理
+        food, gy_best, Best_fit, male, male_individual_fitness, male_fitness_best_value, female, female_individual_fitness, female_fitness_best_value = s.update(gy_best, t, Best_fit, O_num, e, food, male, male_number, male_individual_fitness,
+                   male_fitness_best_value, new_male, female, female_number, female_individual_fitness,
+                   female_fitness_best_value, new_female)
+
+        print('yes')
+
+
+
+
+    #     #映射转换
+    #     X = e.Coding_mapping_conversion(X)
+    #     Fit = s.fitness(X, J, Processing_time, M_num, O_num)
+    #     Best = X[Fit.index(min(Fit))]
+    #     best_fitness = min(Fit)
+    #     if best_fitness < Optimal_fit:
+    #         Optimal_fit = best_fitness
+    #         Optimal_CHS = Best
+    #         Best_fit.append(Optimal_fit)
+    #         print('best_fitness', best_fitness)
+    #
+    #         d = Decode(J, Processing_time, M_num)
+    #         # Fit.append(d.decode(Optimal_CHS, O_num))
+    #         d.decode(Optimal_CHS, O_num)
+    #         Gantt(d.Machines)
+    #     else:
+    #         Best_fit.append(Optimal_fit)
+    #
+    #     if t == (s.Max_Itertions - 1):
+    #         print("最优染色体Optimal_CHS：", Optimal_CHS)
+
+
+
+    x = [_ for _ in range(s.Max_Itertions)]  # 横坐标 迭代数
+    plt.plot(x, Best_fit, '-k')
+    plt.title('the maximum completion time of each iteration')
+    plt.ylabel('Cmax')
+    plt.xlabel('Test Num')
+    plt.savefig('最大完成时间的优化过程.png')
+    plt.show()
+    print("每代最好适应度Best_fit：", Best_fit)
