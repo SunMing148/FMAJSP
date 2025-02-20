@@ -3,6 +3,8 @@ import random
 
 import matplotlib.pyplot as plt
 import numpy as np
+
+from Decode import Decode
 from Encode import Encode
 from SO import SO
 from Instance_2 import *
@@ -173,10 +175,16 @@ if __name__ == '__main__':
     # 计算出全局最佳适应度, 因为这个是第一次进行操作，不用和别的进行对比
     g_best = np.argmin(Fit)
     gy_best = Fit[g_best]
-    Best_fit.append(gy_best)
+    Optimal_fit = gy_best # Optimal_fit存放比上代更优的适应度
+    Best_fit.append(round(gy_best,3))
 
-    # 得到食物的位置，其实就是当前全局最佳适应度的位置
-    food = X[g_best, :]
+    # 得到食物的位置，其实就是当前全局最佳适应度的位置 食物也是全局最优个体
+    food = X[g_best, :]   # 种群初始化时的最优个体
+    food_mapped_individual = e.Individual_Coding_mapping_conversion(food)
+    d = Decode(J, Processing_time, M_num)
+    y = d.decode(food_mapped_individual, O_num)
+    print("种群初始时food的适应度：",y)
+    Gantt(d.Machines)   # 种群初始化时的最优个体 解码后 对应的甘特图
 
     # 将种群进行分离,一半归为雌性，一半归为雄性
     male_number = int(np.round(s.Pop_size / 2))
@@ -197,12 +205,12 @@ if __name__ == '__main__':
     female_fitness_best_index = np.argmin(female_individual_fitness)
     female_fitness_best_value = female_individual_fitness[female_fitness_best_index]
     # 雌性中最优个体
-    female_best_fitness_individual = female[male_fitness_best_index, :]
+    female_best_fitness_individual = female[female_fitness_best_index, :]
 
-    # 更新位置之后的male
-    new_male = np.matrix(np.zeros((male_number, e.Len_Chromo * 2)))
-    # 更新位置之后的female
-    new_female = np.matrix(np.zeros((female_number, e.Len_Chromo * 2)))
+    # # 更新位置之后的male
+    # new_male = np.matrix(np.zeros((male_number, e.Len_Chromo * 2)))
+    # # 更新位置之后的female
+    # new_female = np.matrix(np.zeros((female_number, e.Len_Chromo * 2)))
 
 
 
@@ -213,6 +221,12 @@ if __name__ == '__main__':
         temp = math.exp(-(t / s.Max_Itertions))
         # 计算食物的质量
         quantity = s.C1 * math.exp((t - s.Max_Itertions) / s.Max_Itertions)
+
+        # 更新位置之后的male
+        new_male = np.matrix(np.zeros((male_number, e.Len_Chromo * 2)))
+        # 更新位置之后的female
+        new_female = np.matrix(np.zeros((female_number, e.Len_Chromo * 2)))
+
         if quantity > 1:
             quantity = 1
         # 先判断食物的质量是不是超过了阈值
@@ -241,39 +255,25 @@ if __name__ == '__main__':
                                female_number, female_individual_fitness, new_female)
 
         # 将更新后的位置进行处理
-        food, gy_best, Best_fit, male, male_individual_fitness, male_fitness_best_value, female, female_individual_fitness, female_fitness_best_value = s.update(gy_best, t, Best_fit, O_num, e, food, male, male_number, male_individual_fitness,
-                   male_fitness_best_value, new_male, female, female_number, female_individual_fitness,
-                   female_fitness_best_value, new_female)
-
-        print('yes')
+        male_best_fitness_individual, female_best_fitness_individual, food, gy_best, male, male_individual_fitness, male_fitness_best_value, female, female_individual_fitness, female_fitness_best_value = s.update(gy_best, O_num, e, food, male, male_number, male_individual_fitness, male_fitness_best_value, new_male, male_best_fitness_individual, female, female_number, female_individual_fitness, female_fitness_best_value, new_female, female_best_fitness_individual)
 
 
+        if gy_best < Optimal_fit:
+            Optimal_fit = gy_best
+            #food 就是最优个体
+            food_mapped_individual1 = e.Individual_Coding_mapping_conversion(food)
+            d = Decode(J, Processing_time, M_num)
+            y = d.decode(food_mapped_individual1, O_num)
+            Gantt(d.Machines)  # 种群初始化时的最优个体 解码后 对应的甘特图
 
 
-    #     #映射转换
-    #     X = e.Coding_mapping_conversion(X)
-    #     Fit = s.fitness(X, J, Processing_time, M_num, O_num)
-    #     Best = X[Fit.index(min(Fit))]
-    #     best_fitness = min(Fit)
-    #     if best_fitness < Optimal_fit:
-    #         Optimal_fit = best_fitness
-    #         Optimal_CHS = Best
-    #         Best_fit.append(Optimal_fit)
-    #         print('best_fitness', best_fitness)
-    #
-    #         d = Decode(J, Processing_time, M_num)
-    #         # Fit.append(d.decode(Optimal_CHS, O_num))
-    #         d.decode(Optimal_CHS, O_num)
-    #         Gantt(d.Machines)
-    #     else:
-    #         Best_fit.append(Optimal_fit)
-    #
-    #     if t == (s.Max_Itertions - 1):
-    #         print("最优染色体Optimal_CHS：", Optimal_CHS)
+        print("当前代最优适应度：", round(gy_best, 3))
+        Best_fit.append(round(gy_best, 3))
 
 
 
-    x = [_ for _ in range(s.Max_Itertions)]  # 横坐标 迭代数
+
+    x = [_ for _ in range(s.Max_Itertions+1)]  # 横坐标 迭代数
     plt.plot(x, Best_fit, '-k')
     plt.title('the maximum completion time of each iteration')
     plt.ylabel('Cmax')

@@ -13,7 +13,7 @@ class SO():
         self.Pop_size = 100  # 种群数量
 
         self.C1 = 0.5     #
-        self.C2 = 0.5  #
+        self.C2 = 0.05  # 之前是0.5，改成0.05好像更好了，也不一定
         self.C3 = 2  #
 
         self.food_threshold = 0.25        # 有没有食物的阈值
@@ -54,7 +54,7 @@ class SO():
                 # 计算Am,np.spacing(1)是为了防止进行除法运算的时候出现除0操作
                 am = math.exp(
                     -(male_individual_fitness[rand_leader_index] / (male_individual_fitness[i] + np.spacing(1))))
-                new_male[i, j] = rand_male[0, j] + flag * self.C2 * am * (
+                new_male[i, j] = rand_male[j] + flag * self.C2 * am * (
                         (self.ub - self.lb) * random.random() + self.lb)
         for i in range(female_number):
             for j in range(self.Len_Chromo*2):
@@ -67,7 +67,7 @@ class SO():
                 # 计算Am,np.spacing(1)是为了防止进行除法运算的时候出现除0操作
                 am = math.exp(-(female_individual_fitness[rand_leader_index] / (
                         female_individual_fitness[i] + np.spacing(1))))
-                new_female[i, j] = rand_female[0, j] + flag * self.C2 * am * (
+                new_female[i, j] = rand_female[j] + flag * self.C2 * am * (
                         (self.ub - self.lb) * random.random() + self.lb)
         return new_male, new_female
 
@@ -79,14 +79,14 @@ class SO():
             negative_or_positive = np.random.randint(0, 2)
             flag = self.vec_flag[negative_or_positive]
             for j in range(self.Len_Chromo*2):
-                new_male[i, j] = food[0, j] + flag * self.C3 * temp * random.random() * (food[0, j] - male[i, j])
+                new_male[i, j] = food[j] + flag * self.C3 * temp * random.random() * (food[j] - male[i, j])
         # 更新雌性的位置
         for i in range(female_number):
             # 随机生成+或者是-,来判断当前的c2是取正还是负
             negative_or_positive = np.random.randint(0, 2)
             flag = self.vec_flag[negative_or_positive]
             for j in range(self.Len_Chromo*2):
-                new_female[i, j] = food[0, j] + flag * self.C3 * temp * random.random() * (food[0, j] - female[i, j])
+                new_female[i, j] = food[j] + flag * self.C3 * temp * random.random() * (food[j] - female[i, j])
         return new_male, new_female
 
     def fight(self, quantity, male, male_number, male_individual_fitness, male_fitness_best_value, male_best_fitness_individual, new_male, female, female_number, female_individual_fitness, female_fitness_best_value, female_best_fitness_individual, new_female):
@@ -96,14 +96,14 @@ class SO():
                 # 先计算当前雄性的战斗的能力
                 fm = math.exp(-female_fitness_best_value / (male_individual_fitness[i] + np.spacing(1)))
                 new_male[i, j] = male[i, j] + self.C3 * fm * random.random() * (
-                        quantity * male_best_fitness_individual[0, j] - male[i, j])
+                        quantity * male_best_fitness_individual[j] - male[i, j])
         # 更新雌性的位置
         for i in range(female_number):
             for j in range(self.Len_Chromo*2):
                 # 先计算当前雌性的战斗的能力
                 ff = math.exp(-male_fitness_best_value / (female_individual_fitness[i] + np.spacing(1)))
                 new_female[i, j] = female[i, j] + self.C3 * ff * random.random() * (
-                        quantity * female_best_fitness_individual[0, j] - female[i, j])
+                        quantity * female_best_fitness_individual[j] - female[i, j])
         return new_male, new_female
 
     def mating(self, quantity, male, male_number, male_individual_fitness, new_male, female, female_number, female_individual_fitness, new_female):
@@ -135,15 +135,16 @@ class SO():
                     self.ub - self.lb)
         return new_male, new_female
 
-    def update(self, gy_best, Best_fit, Len, e, food, male, male_number, male_individual_fitness, male_fitness_best_value, new_male, female, female_number, female_individual_fitness, female_fitness_best_value, new_female):
+    def update(self, gy_best, Len, e, food, male, male_number, male_individual_fitness, male_fitness_best_value, new_male, male_best_fitness_individual, female, female_number, female_individual_fitness, female_fitness_best_value, new_female, female_best_fitness_individual):
         # 处理雄性
         for j in range(male_number):
             # 如果当前更新后的值是否在规定的范围内
             flag_low = new_male[j, :] < self.lb
             flag_high = new_male[j, :] > self.ub
-            new_male[j, :] = (np.multiply(new_male[j, :], ~(flag_low + flag_high))) + np.multiply(self.ub,flag_high) + np.multiply(self.lb, flag_low)
+            new_male[j, :] = (np.multiply(new_male[j, :], ~(flag_low + flag_high))) + np.multiply(self.ub-0.0000001,flag_high) + np.multiply(self.lb, flag_low)
             # 计算雄性种群中每一个个体的适应度（这个是被更新过位置的）
-            mapped_individual = e.Individual_Coding_mapping_conversion(new_male[j, :])
+            individual = np.array(new_male[j, :])[0]
+            mapped_individual = e.Individual_Coding_mapping_conversion(individual)
             d = Decode(J, Processing_time, M_num)
             y = d.decode(mapped_individual, Len)
             # 判断是否需要更改当前个体的历史最佳适应度
@@ -163,9 +164,10 @@ class SO():
             # 如果当前更新后的值是否在规定的范围内
             flag_low = new_female[j, :] < self.lb
             flag_high = new_female[j, :] > self.ub
-            new_female[j, :] = (np.multiply(new_female[j, :], ~(flag_low + flag_high))) + np.multiply(self.ub, flag_high) + np.multiply(self.lb, flag_low)
+            new_female[j, :] = (np.multiply(new_female[j, :], ~(flag_low + flag_high))) + np.multiply(self.ub-0.0000001, flag_high) + np.multiply(self.lb, flag_low)
             # 计算雄性种群中每一个个体的适应度（这个是被更新过位置的）
-            mapped_individual = e.Individual_Coding_mapping_conversion(new_female[j, :])
+            individual = np.array(new_female[j, :])[0]
+            mapped_individual = e.Individual_Coding_mapping_conversion(individual)
             d = Decode(J, Processing_time, M_num)
             y = d.decode(mapped_individual, Len)
             # 判断是否需要更改当前个体的历史最佳适应度
@@ -178,7 +180,7 @@ class SO():
         # 拿到索引
         female_current_best_fitness_index = np.argmin(female_individual_fitness)
         # 拿到值
-        female_current_best_fitness = male_individual_fitness[female_current_best_fitness_index]
+        female_current_best_fitness = female_individual_fitness[female_current_best_fitness_index]
 
         # 判断是否需要更新雄性种群的全局最佳适应度
         if male_current_best_fitness < male_fitness_best_value:
@@ -195,13 +197,15 @@ class SO():
 
         # if male_current_best_fitness < female_current_best_fitness:
         #     # Best_fit[t] = male_current_best_fitness
-        #     Best_fit.append(male_current_best_fitness)
+        #     Best_fit.append(round(male_current_best_fitness, 3))
         # else:
         #     # Best_fit[t] = female_current_best_fitness
-        #     Best_fit.append(female_current_best_fitness)
+        #     Best_fit.append(round(female_current_best_fitness, 3))
 
 
         # 更新全局最佳适应度（这里是非常的奇怪的，不进行判断就直接更新了，他就能确定本代的最佳一定是比上一代好！！！）
+        # if gy_best > male_fitness_best_value or gy_best > female_fitness_best_value:
+
         if male_fitness_best_value < female_fitness_best_value:
             gy_best = male_fitness_best_value
             # 更新食物的位置
@@ -211,7 +215,10 @@ class SO():
             # 更新食物的位置
             food = female_best_fitness_individual
 
-        return food, gy_best, Best_fit, male, male_individual_fitness, male_fitness_best_value, female, female_individual_fitness, female_fitness_best_value
+        # print(gy_best)
+
+
+        return male_best_fitness_individual, female_best_fitness_individual, food, gy_best, male, male_individual_fitness, male_fitness_best_value, female, female_individual_fitness, female_fitness_best_value
 
 
 
