@@ -10,18 +10,24 @@ from SO import SO
 from Instance_2 import *
 
 
-
-def generate_color_map():
+def generate_color_map(k):
     # 定义色系与对应的工件ID
     job_groups = {
-        'Reds': [1, 2, 3],
-        'Blues': [10, 11, 12],
-        'Greens': [19, 20, 21],
-        'Oranges': [4, 5, 13, 14, 6, 15],
-        'Purples': [22, 23, 24],
-        'YlOrBr': [7, 8, 9, 16, 17, 18],
-        'PuBu': [25, 26, 27]
+        'Reds': [1, 2, 3],                        # A
+        'Blues': [10, 11, 12],                    # B
+        'Greens': [19, 20, 21],                   # C
+        'Oranges': [4, 5, 6, 13, 14, 15],         # D
+        'Purples': [22, 23, 24],                  # E
+        'YlOrBr': [7, 8, 9, 16, 17, 18],          # F
+        'PuBu': [25, 26, 27]                      # G
     }
+
+    # 遍历job_groups中的每个键值对
+    for key, values in job_groups.items():
+        original_values = values[:]  # 保存原始数组的副本
+        for i in range(1, k):  # 从1到k-1，逐次添加新元素
+            new_values = [x + 27 * i for x in original_values]  # 计算新的元素值
+            job_groups[key].extend(new_values)  # 将新元素添加到数组中
 
     # 创建颜色映射表
     color_map = {}
@@ -38,50 +44,14 @@ def generate_color_map():
             color = cmap(i / (len(jobs) - 1) * 0.4 + 0.3)
             color_map[job_id] = color
 
-    return color_map
+    return color_map, job_groups
 
 #v3
-def Gantt(Machines):
-    # color_map = {
-    #     # 红色系 - 第一组机器
-    #     1: 'darkred', 2: 'firebrick', 3: 'indianred',
-    #     10: 'brown', 11: 'salmon', 12: 'lightsalmon',
-    #     19: 'tomato', 20: 'coral', 21: 'orangered',
-    #
-    #     # 蓝色系 - 第二组机器
-    #     4: 'navy', 5: 'midnightblue', 6: 'darkblue',
-    #     13: 'mediumblue', 14: 'royalblue', 15: 'cornflowerblue',
-    #     22: 'steelblue', 23: 'deepskyblue', 24: 'dodgerblue',
-    #
-    #     # 绿色系 - 第三组机器
-    #     7: 'darkgreen', 8: 'forestgreen', 9: 'seagreen',
-    #     16: 'mediumseagreen', 17: 'limegreen', 18: 'springgreen',
-    #     25: 'mediumspringgreen', 26: 'aquamarine', 27: 'turquoise'
-    # }
-
-    # color_map = {
-    #     # 红色系
-    #     1: 'darkred', 2: 'firebrick', 3: 'indianred',
-    #     # 蓝色系
-    #     10: 'navy', 11: 'royalblue', 12: 'cornflowerblue',
-    #     # 绿色系
-    #     19: 'darkgreen', 20: 'forestgreen', 21: 'seagreen',
-    #     # 紫色系 (用于ID 4, 5, 13, 14, 6, 15)
-    #     4: 'purple', 5: 'darkviolet', 6: 'mediumorchid',
-    #     13: 'plum', 14: 'rebeccapurple', 15: 'mediumpurple',
-    #     # 橙色系 (用于ID 22, 23, 24)
-    #     22: 'orange', 23: 'darkorange', 24: 'coral',
-    #     # 青色系 (用于ID 7, 8, 9, 16, 17, 18)
-    #     7: 'teal', 8: 'aqua', 9: 'cyan',
-    #     16: 'lightseagreen', 17: 'mediumturquoise', 18: 'paleturquoise',
-    #     # 黄色系 (用于ID 25, 26, 27)
-    #     25: 'gold', 26: 'yellow', 27: 'khaki'
-    # }
-
-    color_map = generate_color_map()
+def Gantt(Machines,k):
+    color_map, job_groups = generate_color_map(k)
 
     # 设置画布大小
-    plt.figure(figsize=(10, 6), dpi=300)
+    plt.figure(figsize=(20, 10), dpi=300)
 
     group_spacing = 2  # 组之间的间距
     # machine_offset = {1: 0, 15: group_spacing, 22: group_spacing}
@@ -101,20 +71,23 @@ def Gantt(Machines):
             # job_operation_num = Machine.assigned_task[task_index][1]
             color = color_map.get(job_serial_number, 'gray')
 
-            if job_serial_number in (1, 2, 3):
-                b = f"{job_serial_number}A"
-            elif job_serial_number in (10, 11, 12):
-                b = f"{job_serial_number}B"
-            elif job_serial_number in (19, 20, 21):
-                b = f"{job_serial_number}C"
-            elif job_serial_number in (4, 5, 13, 14, 6, 15):
-                b = f"{job_serial_number}D"
-            elif job_serial_number in (22, 23, 24):
-                b = f"{job_serial_number}E"
-            elif job_serial_number in (7, 8, 9, 16, 17, 18):
-                b = f"{job_serial_number}F"
-            elif job_serial_number in (25, 26, 27):
-                b = f"{job_serial_number}G"
+            if job_serial_number in job_groups['Reds']:
+                b = f"P{job_serial_number}A"
+            elif job_serial_number in job_groups['Blues']:
+                b = f"P{job_serial_number}B"
+            elif job_serial_number in job_groups['Greens']:
+                b = f"P{job_serial_number}C"
+            elif job_serial_number in job_groups['Oranges']:
+                b = f"P{job_serial_number}D"
+            elif job_serial_number in job_groups['Purples']:
+                b = f"P{job_serial_number}E"
+            elif job_serial_number in job_groups['YlOrBr']:
+                b = f"P{job_serial_number}F"
+            elif job_serial_number in job_groups['PuBu']:
+                b = f"P{job_serial_number}G"
+
+            if machine_id in (14,21,25):
+                b = 'F' + b[1:]
 
             # 绘制甘特条
             plt.barh(adjusted_index, width=end - start, height=0.8, left=start,
@@ -157,8 +130,6 @@ def Gantt(Machines):
     plt.show()
 
 
-
-
 if __name__ == '__main__':
     Optimal_fit = 9999  # 最佳适应度（初始化）
     Optimal_CHS = None  # 最佳适应度对应的基因个体（初始化）
@@ -184,7 +155,7 @@ if __name__ == '__main__':
     d = Decode(J, Processing_time, M_num)
     y = d.decode(food_mapped_individual, O_num)
     print("种群初始时food的适应度：",y)
-    Gantt(d.Machines)   # 种群初始化时的最优个体 解码后 对应的甘特图
+    Gantt(d.Machines,k)   # 种群初始化时的最优个体 解码后 对应的甘特图
 
     # 将种群进行分离,一半归为雌性，一半归为雄性
     male_number = int(np.round(s.Pop_size / 2))
@@ -206,13 +177,6 @@ if __name__ == '__main__':
     female_fitness_best_value = female_individual_fitness[female_fitness_best_index]
     # 雌性中最优个体
     female_best_fitness_individual = female[female_fitness_best_index, :]
-
-    # # 更新位置之后的male
-    # new_male = np.matrix(np.zeros((male_number, e.Len_Chromo * 2)))
-    # # 更新位置之后的female
-    # new_female = np.matrix(np.zeros((female_number, e.Len_Chromo * 2)))
-
-
 
     # 迭代
     for t in range(s.Max_Itertions):
@@ -264,13 +228,10 @@ if __name__ == '__main__':
             food_mapped_individual1 = e.Individual_Coding_mapping_conversion(food)
             d = Decode(J, Processing_time, M_num)
             y = d.decode(food_mapped_individual1, O_num)
-            Gantt(d.Machines)  # 种群初始化时的最优个体 解码后 对应的甘特图
-
+            Gantt(d.Machines,k)  # 种群初始化时的最优个体 解码后 对应的甘特图
 
         print("当前代最优适应度：", round(gy_best, 3))
         Best_fit.append(round(gy_best, 3))
-
-
 
 
     x = [_ for _ in range(s.Max_Itertions+1)]  # 横坐标 迭代数

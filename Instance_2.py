@@ -85,15 +85,6 @@ G  =     [[9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 999
           [9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 0.40]]      # 4
 
 
-
-
-O_module = [A]*3 + [D1] + [D2] + [D3] + [F]*3
-P_module = [B]*3 + [D1] + [D2] + [D3] + [G]*3
-Q_module = [C]*3 + [E1] + [E2] + [E3] + [G]*3
-
-Processing_time = O_module + P_module + Q_module
-
-
 def generate_dict(n):
     pattern = [10, 10, 10, 3, 3, 1, 4, 4, 4]
     result = {}
@@ -102,9 +93,19 @@ def generate_dict(n):
             result[i] = value
     return result
 
-n = 3
-J = generate_dict(n)
 
+k=3  #k=1代表生产OPQ各一个，共三个，k=3代表生产共9个
+
+O_module = [A]*3 + [D1] + [D2] + [D3] + [F]*3
+P_module = [B]*3 + [D1] + [D2] + [D3] + [G]*3
+Q_module = [C]*3 + [E1] + [E2] + [E3] + [G]*3
+
+Processing_time = (O_module + P_module + Q_module) * k
+
+
+
+n = 3*k
+J = generate_dict(n)
 
 
 
