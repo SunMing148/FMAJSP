@@ -1,17 +1,16 @@
 import copy
 import numpy as np
-
 from Job import Job
 from Machine import Machine_Time_window
 
-
 class Decode:
-    def __init__(self, J, Processing_time, M_num):
+    def __init__(self, J, Processing_time, M_num, k):
         """
         :param J: 各工件对应的工序数字典
         :param Processing_time: 各工件的加工时间矩阵
         :param M_num: 加工机器数
         """
+        self.k = k     #instance中的k
         self.Processing_time = Processing_time   # 就是Instance里的Processing_time
         self.M_num = M_num
         self.J = J
@@ -24,6 +23,21 @@ class Decode:
             self.Machines.append(Machine_Time_window(j))  # 为每一台机器都创建了一个Machine_Time_window对象
         for k, v in J.items():
             self.Jobs.append(Job(k, v))          # 为每一个工件都创建了一个Job对象
+
+    def find_earliest_completion(self,machine_data, component_list):
+        """
+        查找特定组件列表中最早完成加工的时间及对应的组件编号。
+        :param machine_data: 机器的加工数据（如Machine_processing_data_17）。
+        :param component_list: 组件列表（如D_component1）。
+        :return: 最早完成时间及对应的组件编号。
+        """
+        earliest_time = float('inf')
+        component_id = None
+        for item in machine_data:
+            if item[0] in component_list and item[1] < earliest_time:
+                earliest_time = item[1]
+                component_id = item[0]
+        return earliest_time, component_id
 
     # 时间顺序矩阵和机器顺序矩阵，根据基因的MS部分转换
     def Order_Matrix(self, MS):
@@ -88,12 +102,57 @@ class Decode:
         :param Len_Chromo: MS与OS的分解线
         :return: 适应度，即最大加工时间
         """
+
+        Ap=[5,14,23]
+        temp_Ap = copy.deepcopy(Ap)
+        for i in range(1, self.k):  # 从1到k-1，逐次添加新元素
+            new_values = [x + 27 * i for x in temp_Ap]  # 计算新的元素值
+            Ap.extend(new_values)  # 将新元素添加到数组中
+
+        D = [6, 15]
+        temp_D = copy.deepcopy(D)
+        for i in range(1, self.k):  # 从1到k-1，逐次添加新元素
+            new_values = [x + 27 * i for x in temp_D]  # 计算新的元素值
+            D.extend(new_values)  # 将新元素添加到数组中
+
+        E = [24]
+        temp_E = copy.deepcopy(E)
+        for i in range(1, self.k):  # 从1到k-1，逐次添加新元素
+            new_values = [x + 27 * i for x in temp_E]  # 计算新的元素值
+            E.extend(new_values)  # 将新元素添加到数组中
+
+        D_component1 = [4, 13]
+        temp_D_component1 = copy.deepcopy(D_component1)
+        for i in range(1, self.k):  # 从1到k-1，逐次添加新元素
+            new_values = [x + 27 * i for x in temp_D_component1]  # 计算新的元素值
+            D_component1.extend(new_values)  # 将新元素添加到数组中
+
+        D_component2 = [5, 14]
+        temp_D_component2 = copy.deepcopy(D_component2)
+        for i in range(1, self.k):  # 从1到k-1，逐次添加新元素
+            new_values = [x + 27 * i for x in temp_D_component2]  # 计算新的元素值
+            D_component2.extend(new_values)  # 将新元素添加到数组中
+
+        E_component1 = [22]
+        temp_E_component1 = copy.deepcopy(E_component1)
+        for i in range(1, self.k):  # 从1到k-1，逐次添加新元素
+            new_values = [x + 27 * i for x in temp_E_component1]  # 计算新的元素值
+            E_component1.extend(new_values)  # 将新元素添加到数组中
+
+        E_component2 = [23]
+        temp_E_component2 = copy.deepcopy(E_component2)
+        for i in range(1, self.k):  # 从1到k-1，逐次添加新元素
+            new_values = [x + 27 * i for x in temp_E_component2]  # 计算新的元素值
+            E_component2.extend(new_values)  # 将新元素添加到数组中
+
+        Matching_result = []   # 装配配套结果
+
         MS = list(CHS[0:Len_Chromo])
         OS = list(CHS[Len_Chromo:2 * Len_Chromo])
         Needed_Matrix = self.Order_Matrix(MS)
         JM = Needed_Matrix[0]
         for i in OS:
-            if i in [5,14,23]: #6,15,24
+            if i in Ap:
                 continue
             Job = i
             O_num = self.Jobs[Job].Current_Processed()  # 现在加工的工序 当前工件的第几道工序
@@ -110,229 +169,63 @@ class Decode:
             # Para[3] ：O_num 现在加工的工序 当前工件的第几道工序
             self.Machines[Machine]._Input(Job, Para[0], Para[2], Para[3])  # 机器完成该工件该工序
 
-
-
         a = copy.deepcopy(self.Machines[20 - 1].O_end)
         b = copy.deepcopy(self.Machines[20 - 1].assigned_task)
         c = copy.deepcopy(self.Machines[17 - 1].O_end)
         d = copy.deepcopy(self.Machines[17 - 1].assigned_task)
 
+        Machine_processing_data_20 = [[pair[0], a_val] for pair, a_val in zip(b, a)]
+        Machine_processing_data_17 = [[pair[0], c_val] for pair, c_val in zip(d, c)]
 
-        OS_Mechanism_Assembly = [num for num in OS if num in {5, 14, 23}]   # 获得OS中的5，14，23这三个，并保留其在OS中的顺序
+        while D or E:
+            finished_item = -1
+            comp1_id = -1
+            comp2_id = -1
+            earliest_time = -1
 
-        if OS_Mechanism_Assembly == [5, 14, 23]: #完成
-            O_num = self.Jobs[5].Current_Processed()  # 现在加工的工序 当前工件的第几道工序
-            Machine = JM[5][O_num]  # 用基因的OS部分的工件序号以及工序序号索引机器顺序矩阵的机器序号
-            P_t = self.Processing_time[5][O_num][Machine]  # P_t对应具体工件的工序的具体机器加工时间
+            # 对于D类型成品
+            time_D_comp1, comp1_id_D = self.find_earliest_completion(Machine_processing_data_17, D_component1)
+            time_D_comp2, comp2_id_D = self.find_earliest_completion(Machine_processing_data_20, D_component2)
+            earliest_time_D = max(time_D_comp1, time_D_comp2)
+
+            # 对于E类型成品
+            time_E_comp1, comp1_id_E = self.find_earliest_completion(Machine_processing_data_17, E_component1)
+            time_E_comp2, comp2_id_E = self.find_earliest_completion(Machine_processing_data_20, E_component2)
+            earliest_time_E = max(time_E_comp1, time_E_comp2)
+
+            if (not D) or (E and earliest_time_E < earliest_time_D):
+                # 加工E类型成品
+                if E:
+                    finished_item = E.pop(0)
+                    comp1_id = comp1_id_E
+                    comp2_id = comp2_id_E
+                    earliest_time = earliest_time_E
+            else:
+                # 加工D类型成品
+                if D:
+                    finished_item = D.pop(0)
+                    comp1_id = comp1_id_D
+                    comp2_id = comp2_id_D
+                    earliest_time = earliest_time_D
+
+            # 使用列表推导式过滤已配套的工件
+            Matching_result.append((finished_item, comp1_id, comp2_id))
+            current_job = finished_item - 1
+            Machine_processing_data_17 = [sublist for sublist in Machine_processing_data_17 if sublist[0] != comp1_id]
+            Machine_processing_data_20 = [sublist for sublist in Machine_processing_data_20 if sublist[0] != comp2_id]
+            O_num = self.Jobs[current_job].Current_Processed()  # 现在加工的工序 当前工件的第几道工序       0
+            Machine = JM[current_job][O_num]  # 用基因的OS部分的工件序号以及工序序号索引机器顺序矩阵的机器序号  20  21-1
+            P_t = self.Processing_time[current_job][O_num][Machine]  # P_t对应具体工件的工序的具体机器加工时间
             Machine_end_time = self.Machines[Machine].End_time
-            start1 = max(Machine_end_time,min(a[b.index([5, 3])], a[b.index([14, 3])]), min(c[d.index([4, 3])], c[d.index([13, 3])]))
-            End_work_time = start1 + P_t
-            self.Jobs[5]._Input(start1, End_work_time, Machine)  # 工件完成该工序
+            start = max(Machine_end_time, earliest_time)
+            End_work_time = start + P_t
+            self.Jobs[current_job]._Input(start, End_work_time, Machine)  # 工件完成该工序
             if End_work_time > self.fitness:
                 self.fitness = End_work_time
-            self.Machines[Machine]._Input(5, start1, P_t, O_num)  # 机器完成该工件该工序
+            self.Machines[Machine]._Input(current_job, start, P_t, O_num)  # 机器完成该工件该工序
+
+        # print("Matching_result:", Matching_result)
+
+        return self.fitness, Matching_result
 
 
-            O_num = self.Jobs[14].Current_Processed()  # 现在加工的工序 当前工件的第几道工序
-            Machine = JM[14][O_num]  # 用基因的OS部分的工件序号以及工序序号索引机器顺序矩阵的机器序号
-            P_t = self.Processing_time[14][O_num][Machine]  # P_t对应具体工件的工序的具体机器加工时间
-            Machine_end_time = self.Machines[Machine].End_time
-            start2 = max(Machine_end_time,max(max(a[b.index([5,3])],a[b.index([14,3])]),max(c[d.index([4,3])],c[d.index([13,3])])))
-            End_work_time = start2 + P_t
-            self.Jobs[14]._Input(start2, End_work_time, Machine)  # 工件完成该工序
-            if End_work_time > self.fitness:
-                self.fitness = End_work_time
-            self.Machines[Machine]._Input(14, start2, P_t, O_num)  # 机器完成该工件该工序
-
-            O_num = self.Jobs[23].Current_Processed()  # 现在加工的工序 当前工件的第几道工序
-            Machine = JM[23][O_num]  # 用基因的OS部分的工件序号以及工序序号索引机器顺序矩阵的机器序号
-            P_t = self.Processing_time[23][O_num][Machine]  # P_t对应具体工件的工序的具体机器加工时间
-            Machine_end_time = self.Machines[Machine].End_time
-            start3 = max(Machine_end_time,a[b.index([23,3])],c[d.index([22,3])])
-            End_work_time = start3 + P_t
-            self.Jobs[23]._Input(start3, End_work_time, Machine)  # 工件完成该工序
-            if End_work_time > self.fitness:
-                self.fitness = End_work_time
-            self.Machines[Machine]._Input(23, start3, P_t, O_num)  # 机器完成该工件该工序
-
-        elif OS_Mechanism_Assembly == [5, 23, 14]: #完成
-            O_num = self.Jobs[5].Current_Processed()  # 现在加工的工序 当前工件的第几道工序
-            Machine = JM[5][O_num]  # 用基因的OS部分的工件序号以及工序序号索引机器顺序矩阵的机器序号
-            P_t = self.Processing_time[5][O_num][Machine]  # P_t对应具体工件的工序的具体机器加工时间
-            Machine_end_time = self.Machines[Machine].End_time
-            start1 = max(Machine_end_time,min(a[b.index([5, 3])], a[b.index([14, 3])]), min(c[d.index([4, 3])], c[d.index([13, 3])]))
-            End_work_time = start1 + P_t
-            self.Jobs[5]._Input(start1, End_work_time, Machine)  # 工件完成该工序
-            if End_work_time > self.fitness:
-                self.fitness = End_work_time
-            self.Machines[Machine]._Input(5, start1, P_t, O_num)  # 机器完成该工件该工序
-
-            O_num = self.Jobs[23].Current_Processed()  # 现在加工的工序 当前工件的第几道工序
-            Machine = JM[23][O_num]  # 用基因的OS部分的工件序号以及工序序号索引机器顺序矩阵的机器序号
-            P_t = self.Processing_time[23][O_num][Machine]  # P_t对应具体工件的工序的具体机器加工时间
-            Machine_end_time = self.Machines[Machine].End_time
-            start2 = max(Machine_end_time, a[b.index([23, 3])], c[d.index([22, 3])])
-            End_work_time = start2 + P_t
-            self.Jobs[23]._Input(start2, End_work_time, Machine)  # 工件完成该工序
-            if End_work_time > self.fitness:
-                self.fitness = End_work_time
-            self.Machines[Machine]._Input(23, start2, P_t, O_num)  # 机器完成该工件该工序
-
-            O_num = self.Jobs[14].Current_Processed()  # 现在加工的工序 当前工件的第几道工序
-            Machine = JM[14][O_num]  # 用基因的OS部分的工件序号以及工序序号索引机器顺序矩阵的机器序号
-            P_t = self.Processing_time[14][O_num][Machine]  # P_t对应具体工件的工序的具体机器加工时间
-            Machine_end_time = self.Machines[Machine].End_time
-            start3 = max(Machine_end_time, max(max(a[b.index([5, 3])], a[b.index([14, 3])]),
-                                      max(c[d.index([4, 3])], c[d.index([13, 3])])))
-            End_work_time = start3 + P_t
-            self.Jobs[14]._Input(start3, End_work_time, Machine)  # 工件完成该工序
-            if End_work_time > self.fitness:
-                self.fitness = End_work_time
-            self.Machines[Machine]._Input(14, start3, P_t, O_num)  # 机器完成该工件该工序
-
-        elif OS_Mechanism_Assembly == [14, 5, 23]: #完成
-            O_num = self.Jobs[14].Current_Processed()  # 现在加工的工序 当前工件的第几道工序
-            Machine = JM[14][O_num]  # 用基因的OS部分的工件序号以及工序序号索引机器顺序矩阵的机器序号
-            P_t = self.Processing_time[14][O_num][Machine]  # P_t对应具体工件的工序的具体机器加工时间
-            Machine_end_time = self.Machines[Machine].End_time
-            start1 = max(Machine_end_time,min(a[b.index([5, 3])], a[b.index([14, 3])]), min(c[d.index([4, 3])], c[d.index([13, 3])]))
-            End_work_time = start1 + P_t
-            self.Jobs[14]._Input(start1, End_work_time, Machine)  # 工件完成该工序
-            if End_work_time > self.fitness:
-                self.fitness = End_work_time
-            self.Machines[Machine]._Input(14, start1, P_t, O_num)  # 机器完成该工件该工序
-
-            O_num = self.Jobs[5].Current_Processed()  # 现在加工的工序 当前工件的第几道工序
-            Machine = JM[5][O_num]  # 用基因的OS部分的工件序号以及工序序号索引机器顺序矩阵的机器序号
-            P_t = self.Processing_time[5][O_num][Machine]  # P_t对应具体工件的工序的具体机器加工时间
-            Machine_end_time = self.Machines[Machine].End_time
-            start2 = max(Machine_end_time, max(max(a[b.index([5, 3])], a[b.index([14, 3])]),
-                                      max(c[d.index([4, 3])], c[d.index([13, 3])])))
-            End_work_time = start2 + P_t
-            self.Jobs[5]._Input(start2, End_work_time, Machine)  # 工件完成该工序
-            if End_work_time > self.fitness:
-                self.fitness = End_work_time
-            self.Machines[Machine]._Input(5, start2, P_t, O_num)  # 机器完成该工件该工序
-
-
-            O_num = self.Jobs[23].Current_Processed()  # 现在加工的工序 当前工件的第几道工序
-            Machine = JM[23][O_num]  # 用基因的OS部分的工件序号以及工序序号索引机器顺序矩阵的机器序号
-            P_t = self.Processing_time[23][O_num][Machine]  # P_t对应具体工件的工序的具体机器加工时间
-            Machine_end_time = self.Machines[Machine].End_time
-            start3 = max(Machine_end_time, a[b.index([23, 3])], c[d.index([22, 3])])
-            End_work_time = start3 + P_t
-            self.Jobs[23]._Input(start3, End_work_time, Machine)  # 工件完成该工序
-            if End_work_time > self.fitness:
-                self.fitness = End_work_time
-            self.Machines[Machine]._Input(23, start3, P_t, O_num)  # 机器完成该工件该工序
-
-        elif OS_Mechanism_Assembly == [14, 23, 5]: #完成
-            O_num = self.Jobs[14].Current_Processed()  # 现在加工的工序 当前工件的第几道工序
-            Machine = JM[14][O_num]  # 用基因的OS部分的工件序号以及工序序号索引机器顺序矩阵的机器序号
-            P_t = self.Processing_time[14][O_num][Machine]  # P_t对应具体工件的工序的具体机器加工时间
-            Machine_end_time = self.Machines[Machine].End_time
-            start1 = max(Machine_end_time,min(a[b.index([5, 3])], a[b.index([14, 3])]), min(c[d.index([4, 3])], c[d.index([13, 3])]))
-            End_work_time = start1 + P_t
-            self.Jobs[14]._Input(start1, End_work_time, Machine)  # 工件完成该工序
-            if End_work_time > self.fitness:
-                self.fitness = End_work_time
-            self.Machines[Machine]._Input(14, start1, P_t, O_num)  # 机器完成该工件该工序
-
-
-            O_num = self.Jobs[23].Current_Processed()  # 现在加工的工序 当前工件的第几道工序
-            Machine = JM[23][O_num]  # 用基因的OS部分的工件序号以及工序序号索引机器顺序矩阵的机器序号
-            P_t = self.Processing_time[23][O_num][Machine]  # P_t对应具体工件的工序的具体机器加工时间
-            Machine_end_time = self.Machines[Machine].End_time
-            start2 = max(Machine_end_time, a[b.index([23, 3])], c[d.index([22, 3])])
-            End_work_time = start2 + P_t
-            self.Jobs[23]._Input(start2, End_work_time, Machine)  # 工件完成该工序
-            if End_work_time > self.fitness:
-                self.fitness = End_work_time
-            self.Machines[Machine]._Input(23, start2, P_t, O_num)  # 机器完成该工件该工序
-
-
-            O_num = self.Jobs[5].Current_Processed()  # 现在加工的工序 当前工件的第几道工序
-            Machine = JM[5][O_num]  # 用基因的OS部分的工件序号以及工序序号索引机器顺序矩阵的机器序号
-            P_t = self.Processing_time[5][O_num][Machine]  # P_t对应具体工件的工序的具体机器加工时间
-            Machine_end_time = self.Machines[Machine].End_time
-            start3 = max(Machine_end_time, max(max(a[b.index([5, 3])], a[b.index([14, 3])]),
-                                      max(c[d.index([4, 3])], c[d.index([13, 3])])))
-            End_work_time = start3 + P_t
-            self.Jobs[5]._Input(start3, End_work_time, Machine)  # 工件完成该工序
-            if End_work_time > self.fitness:
-                self.fitness = End_work_time
-            self.Machines[Machine]._Input(5, start3, P_t, O_num)  # 机器完成该工件该工序
-
-        elif OS_Mechanism_Assembly == [23, 14, 5]:
-            O_num = self.Jobs[23].Current_Processed()  # 现在加工的工序 当前工件的第几道工序
-            Machine = JM[23][O_num]  # 用基因的OS部分的工件序号以及工序序号索引机器顺序矩阵的机器序号
-            P_t = self.Processing_time[23][O_num][Machine]  # P_t对应具体工件的工序的具体机器加工时间
-            Machine_end_time = self.Machines[Machine].End_time
-            start1 = max(Machine_end_time,a[b.index([23, 3])], c[d.index([22, 3])])
-            End_work_time = start1 + P_t
-            self.Jobs[23]._Input(start1, End_work_time, Machine)  # 工件完成该工序
-            if End_work_time > self.fitness:
-                self.fitness = End_work_time
-            self.Machines[Machine]._Input(23, start1, P_t, O_num)  # 机器完成该工件该工序
-
-
-            O_num = self.Jobs[14].Current_Processed()  # 现在加工的工序 当前工件的第几道工序
-            Machine = JM[14][O_num]  # 用基因的OS部分的工件序号以及工序序号索引机器顺序矩阵的机器序号
-            P_t = self.Processing_time[14][O_num][Machine]  # P_t对应具体工件的工序的具体机器加工时间
-            Machine_end_time = self.Machines[Machine].End_time
-            start2 = max(Machine_end_time,max(min(a[b.index([5, 3])], a[b.index([14, 3])]), min(c[d.index([4, 3])], c[d.index([13, 3])])))
-            End_work_time = start2 + P_t
-            self.Jobs[14]._Input(start2, End_work_time, Machine)  # 工件完成该工序
-            if End_work_time > self.fitness:
-                self.fitness = End_work_time
-            self.Machines[Machine]._Input(14, start2, P_t, O_num)  # 机器完成该工件该工序
-
-            O_num = self.Jobs[5].Current_Processed()  # 现在加工的工序 当前工件的第几道工序
-            Machine = JM[5][O_num]  # 用基因的OS部分的工件序号以及工序序号索引机器顺序矩阵的机器序号
-            P_t = self.Processing_time[5][O_num][Machine]  # P_t对应具体工件的工序的具体机器加工时间
-            Machine_end_time = self.Machines[Machine].End_time
-            start3 = max(Machine_end_time, max(max(a[b.index([5, 3])], a[b.index([14, 3])]),
-                                      max(c[d.index([4, 3])], c[d.index([13, 3])])))
-            End_work_time = start3 + P_t
-            self.Jobs[5]._Input(start3, End_work_time, Machine)  # 工件完成该工序
-            if End_work_time > self.fitness:
-                self.fitness = End_work_time
-            self.Machines[Machine]._Input(5, start3, P_t, O_num)  # 机器完成该工件该工序
-
-        elif OS_Mechanism_Assembly == [23, 5, 14]:
-            O_num = self.Jobs[23].Current_Processed()  # 现在加工的工序 当前工件的第几道工序
-            Machine = JM[23][O_num]  # 用基因的OS部分的工件序号以及工序序号索引机器顺序矩阵的机器序号
-            P_t = self.Processing_time[23][O_num][Machine]  # P_t对应具体工件的工序的具体机器加工时间
-            Machine_end_time = self.Machines[Machine].End_time
-            start1 = max(Machine_end_time,a[b.index([23, 3])], c[d.index([22, 3])])
-            End_work_time = start1 + P_t
-            self.Jobs[23]._Input(start1, End_work_time, Machine)  # 工件完成该工序
-            if End_work_time > self.fitness:
-                self.fitness = End_work_time
-            self.Machines[Machine]._Input(23, start1, P_t, O_num)  # 机器完成该工件该工序
-
-            O_num = self.Jobs[5].Current_Processed()  # 现在加工的工序 当前工件的第几道工序
-            Machine = JM[5][O_num]  # 用基因的OS部分的工件序号以及工序序号索引机器顺序矩阵的机器序号
-            P_t = self.Processing_time[5][O_num][Machine]  # P_t对应具体工件的工序的具体机器加工时间
-            Machine_end_time = self.Machines[Machine].End_time
-            start2 = max(Machine_end_time,max(min(a[b.index([5, 3])], a[b.index([14, 3])]), min(c[d.index([4, 3])], c[d.index([13, 3])])))
-            End_work_time = start2 + P_t
-            self.Jobs[5]._Input(start2, End_work_time, Machine)  # 工件完成该工序
-            if End_work_time > self.fitness:
-                self.fitness = End_work_time
-            self.Machines[Machine]._Input(5, start2, P_t, O_num)  # 机器完成该工件该工序
-
-            O_num = self.Jobs[14].Current_Processed()  # 现在加工的工序 当前工件的第几道工序
-            Machine = JM[14][O_num]  # 用基因的OS部分的工件序号以及工序序号索引机器顺序矩阵的机器序号
-            P_t = self.Processing_time[14][O_num][Machine]  # P_t对应具体工件的工序的具体机器加工时间
-            Machine_end_time = self.Machines[Machine].End_time
-            start3 = max(Machine_end_time, max(max(a[b.index([5, 3])], a[b.index([14, 3])]),
-                                      max(c[d.index([4, 3])], c[d.index([13, 3])])))
-            End_work_time = start3 + P_t
-            self.Jobs[14]._Input(start3, End_work_time, Machine)  # 工件完成该工序
-            if End_work_time > self.fitness:
-                self.fitness = End_work_time
-            self.Machines[Machine]._Input(14, start3, P_t, O_num)  # 机器完成该工件该工序
-
-
-        return self.fitness

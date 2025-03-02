@@ -9,7 +9,8 @@ from Instance_2 import *
 
 
 class SO():
-    def __init__(self, Len_Chromo):
+    def __init__(self, Len_Chromo, k):
+        self.k = k
         self.Pop_size = 100  # 种群数量
 
         self.C1 = 0.5     #
@@ -37,8 +38,9 @@ class SO():
         CHS = e.Coding_mapping_conversion(CHS)
         Fit = []
         for i in range(len(CHS)):
-            d = Decode(J, Processing_time, M_num)
-            Fit.append(d.decode(CHS[i], Len))
+            d = Decode(J, Processing_time, M_num, self.k)
+            y, Matching_result = d.decode(CHS[i], Len)
+            Fit.append(y)
         return Fit
 
     def ExplorationPhaseNoFood(self, male_number, male, male_individual_fitness, new_male, female_number, female, female_individual_fitness, new_female):
@@ -145,8 +147,8 @@ class SO():
             # 计算雄性种群中每一个个体的适应度（这个是被更新过位置的）
             individual = np.array(new_male[j, :])[0]
             mapped_individual = e.Individual_Coding_mapping_conversion(individual)
-            d = Decode(J, Processing_time, M_num)
-            y = d.decode(mapped_individual, Len)
+            d = Decode(J, Processing_time, M_num, self.k)
+            y, Matching_result = d.decode(mapped_individual, Len)
             # 判断是否需要更改当前个体的历史最佳适应度
             if y < male_individual_fitness[j]:
                 # 更新适应度
@@ -168,8 +170,8 @@ class SO():
             # 计算雄性种群中每一个个体的适应度（这个是被更新过位置的）
             individual = np.array(new_female[j, :])[0]
             mapped_individual = e.Individual_Coding_mapping_conversion(individual)
-            d = Decode(J, Processing_time, M_num)
-            y = d.decode(mapped_individual, Len)
+            d = Decode(J, Processing_time, M_num, self.k)
+            y, Matching_result = d.decode(mapped_individual, Len)
             # 判断是否需要更改当前个体的历史最佳适应度
             if y < female_individual_fitness[j]:
                 # 更新适应度

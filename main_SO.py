@@ -136,7 +136,7 @@ if __name__ == '__main__':
 
     e = Encode(Processing_time, J, J_num, M_num)
     e.Get_Map_base_value()
-    s = SO(e.Len_Chromo)
+    s = SO(e.Len_Chromo, k)
     X = s.SO_initial()
     
     Best_fit = []  # 记录适应度在迭代过程中的变化，便于绘图
@@ -152,8 +152,8 @@ if __name__ == '__main__':
     # 得到食物的位置，其实就是当前全局最佳适应度的位置 食物也是全局最优个体
     food = X[g_best, :]   # 种群初始化时的最优个体
     food_mapped_individual = e.Individual_Coding_mapping_conversion(food)
-    d = Decode(J, Processing_time, M_num)
-    y = d.decode(food_mapped_individual, O_num)
+    d = Decode(J, Processing_time, M_num, k)
+    y, Matching_result = d.decode(food_mapped_individual, O_num)
     print("种群初始时food的适应度：",y)
     Gantt(d.Machines,k)   # 种群初始化时的最优个体 解码后 对应的甘特图
 
@@ -226,13 +226,13 @@ if __name__ == '__main__':
             Optimal_fit = gy_best
             #food 就是最优个体
             food_mapped_individual1 = e.Individual_Coding_mapping_conversion(food)
-            d = Decode(J, Processing_time, M_num)
-            y = d.decode(food_mapped_individual1, O_num)
+            d = Decode(J, Processing_time, M_num, k)
+            y, Matching_result = d.decode(food_mapped_individual1, O_num)
             Gantt(d.Machines,k)  # 种群初始化时的最优个体 解码后 对应的甘特图
+            print("机器21装配工序的配套关系为：",Matching_result)
 
         print("当前代最优适应度：", round(gy_best, 3))
         Best_fit.append(round(gy_best, 3))
-
 
     x = [_ for _ in range(s.Max_Itertions+1)]  # 横坐标 迭代数
     plt.plot(x, Best_fit, '-k')
