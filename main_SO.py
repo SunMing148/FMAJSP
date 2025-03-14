@@ -51,7 +51,8 @@ def Gantt(Machines,k):
     color_map, job_groups = generate_color_map(k)
 
     # 设置画布大小
-    plt.figure(figsize=(20, 10), dpi=300)
+    # plt.figure(figsize=(20, 10), dpi=300)
+    plt.figure(figsize=(10, 6), dpi=300)
 
     group_spacing = 2  # 组之间的间距
     # machine_offset = {1: 0, 15: group_spacing, 22: group_spacing}
@@ -153,9 +154,10 @@ if __name__ == '__main__':
     food = X[g_best, :]   # 种群初始化时的最优个体
     food_mapped_individual = e.Individual_Coding_mapping_conversion(food)
     d = Decode(J, Processing_time, M_num, k)
-    y, Matching_result = d.decode(food_mapped_individual, O_num)
+    y, Matching_result_all = d.decode(food_mapped_individual, O_num)
     print("种群初始时food的适应度：",y)
     Gantt(d.Machines,k)   # 种群初始化时的最优个体 解码后 对应的甘特图
+    print("总配套关系为：", Matching_result_all)
 
     # 将种群进行分离,一半归为雌性，一半归为雄性
     male_number = int(np.round(s.Pop_size / 2))
@@ -227,9 +229,9 @@ if __name__ == '__main__':
             #food 就是最优个体
             food_mapped_individual1 = e.Individual_Coding_mapping_conversion(food)
             d = Decode(J, Processing_time, M_num, k)
-            y, Matching_result = d.decode(food_mapped_individual1, O_num)
+            y, Matching_result_all = d.decode(food_mapped_individual1, O_num)
             Gantt(d.Machines,k)  # 种群初始化时的最优个体 解码后 对应的甘特图
-            print("机器21装配工序的配套关系为：",Matching_result)
+            print("总配套关系为：",Matching_result_all)
 
         print("当前代最优适应度：", round(gy_best, 3))
         Best_fit.append(round(gy_best, 3))

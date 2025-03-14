@@ -39,7 +39,7 @@ class SO():
         Fit = []
         for i in range(len(CHS)):
             d = Decode(J, Processing_time, M_num, self.k)
-            y, Matching_result = d.decode(CHS[i], Len)
+            y, Matching_result_all = d.decode(CHS[i], Len)
             Fit.append(y)
         return Fit
 
@@ -148,7 +148,7 @@ class SO():
             individual = np.array(new_male[j, :])[0]
             mapped_individual = e.Individual_Coding_mapping_conversion(individual)
             d = Decode(J, Processing_time, M_num, self.k)
-            y, Matching_result = d.decode(mapped_individual, Len)
+            y, Matching_result_all = d.decode(mapped_individual, Len)
             # 判断是否需要更改当前个体的历史最佳适应度
             if y < male_individual_fitness[j]:
                 # 更新适应度
@@ -171,7 +171,7 @@ class SO():
             individual = np.array(new_female[j, :])[0]
             mapped_individual = e.Individual_Coding_mapping_conversion(individual)
             d = Decode(J, Processing_time, M_num, self.k)
-            y, Matching_result = d.decode(mapped_individual, Len)
+            y, Matching_result_all = d.decode(mapped_individual, Len)
             # 判断是否需要更改当前个体的历史最佳适应度
             if y < female_individual_fitness[j]:
                 # 更新适应度
