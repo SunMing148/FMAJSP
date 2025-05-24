@@ -1,12 +1,14 @@
 import math
 import random
+import time
 
 import matplotlib.pyplot as plt
 import numpy as np
 
 from Decode import Decode
 from Encode import Encode
-from SO import SO
+from SO import SO            # 导入此是改进的ISO
+# from SO_beifen import SO   # 导入此是未改进的标准SO
 from Instance_2 import *
 
 
@@ -51,13 +53,14 @@ def Gantt(Machines,k):
     color_map, job_groups = generate_color_map(k)
 
     # 设置画布大小
-    # plt.figure(figsize=(20, 10), dpi=300)
-    plt.figure(figsize=(10, 6), dpi=300)
+    plt.figure(figsize=(20, 10), dpi=300)
+    # plt.figure(figsize=(10, 6), dpi=300)
 
     group_spacing = 2  # 组之间的间距
     # machine_offset = {1: 0, 15: group_spacing, 22: group_spacing}
     machine_offset = {1: 0, 15: group_spacing, 18: 0.3, 21: 0.3,22: group_spacing}
 
+    ans = []
 
     for machine_index, Machine in enumerate(Machines):
         start_times = Machine.O_start
@@ -66,6 +69,9 @@ def Gantt(Machines,k):
         # 计算当前机器的实际绘图位置
         machine_id = machine_index + 1
         adjusted_index = machine_index + sum([offset for key, offset in machine_offset.items() if machine_id >= key])
+
+        mi=[]
+        mi.append(machine_id)
 
         for task_index, (start, end) in enumerate(zip(start_times, end_times)):
             job_serial_number = Machine.assigned_task[task_index][0]
@@ -100,6 +106,12 @@ def Gantt(Machines,k):
             plt.text(x=start + (end - start) / 2, y=adjusted_index,
                      s=b, va='center', ha='center')
 
+            mi.append(b)
+
+        ans.append(mi)
+
+    print("每台机器上工件的加工顺序：",ans)
+
     # 设置Y轴刻度标签
     yticks = []
     yticklabels = []
@@ -119,12 +131,12 @@ def Gantt(Machines,k):
 
     # 绘制组标签
     for label, position in group_labels.items():
-        plt.text(-0.3, position, label, fontsize=8, rotation=90, va='center', ha='right')
-
+        # plt.text(-0.3, position, label, fontsize=8, rotation=90, va='center', ha='right')  # 适用成品少
+        plt.text(-1.2, position, label, fontsize=12, rotation=90, va='center', ha='right')    # 适用成品多
     # 添加标题和坐标轴标签
-    plt.title('Scheduling Gantt chart')
-    plt.ylabel('Machines', labelpad=20)
-    plt.xlabel('Time(min)')
+    # plt.title('Scheduling Gantt chart')
+    plt.ylabel('Line & Machines', labelpad=20, fontsize=12)
+    plt.xlabel('makespan (minute)', fontsize=12)
     # 保存并显示图像
     plt.tight_layout()
     plt.savefig('优化后排程方案的甘特图.png', bbox_inches='tight')
@@ -132,6 +144,9 @@ def Gantt(Machines,k):
 
 
 if __name__ == '__main__':
+
+    start_time = time.time()  # 记录开始时间
+
     Optimal_fit = 9999  # 最佳适应度（初始化）
     Optimal_CHS = None  # 最佳适应度对应的基因个体（初始化）
 
@@ -156,7 +171,7 @@ if __name__ == '__main__':
     d = Decode(J, Processing_time, M_num, k)
     y, Matching_result_all = d.decode(food_mapped_individual, O_num)
     print("种群初始时food的适应度：",y)
-    Gantt(d.Machines,k)   # 种群初始化时的最优个体 解码后 对应的甘特图
+    # Gantt(d.Machines,k)   # 种群初始化时的最优个体 解码后 对应的甘特图
     print("总配套关系为：", Matching_result_all)
 
     # 将种群进行分离,一半归为雌性，一半归为雄性
@@ -181,12 +196,14 @@ if __name__ == '__main__':
     female_best_fitness_individual = female[female_fitness_best_index, :]
 
     # 迭代
-    for t in range(s.Max_Itertions):
+    for t in range(1, s.Max_Itertions+1):
         print("iter_{}".format(t))
         # 计算温度
         temp = math.exp(-(t / s.Max_Itertions))
         # 计算食物的质量
         quantity = s.C1 * math.exp((t - s.Max_Itertions) / s.Max_Itertions)
+        # 正弦变化的自适应惯性权重 食物指数更新策略
+        quantity = math.sin(random.random() + math.pi * t / 4 / s.Max_Itertions) * s.C1 * math.exp((t - s.Max_Itertions) / s.Max_Itertions)
 
         # 更新位置之后的male
         new_male = np.matrix(np.zeros((male_number, e.Len_Chromo * 2)))
@@ -198,7 +215,9 @@ if __name__ == '__main__':
         # 先判断食物的质量是不是超过了阈值
         if quantity < s.food_threshold:
             # 如果当前是没有食物的就寻找食物
-            new_male, new_female = s.ExplorationPhaseNoFood(male_number, male, male_individual_fitness, new_male, female_number, female, female_individual_fitness, new_female)
+            # new_male, new_female = s.ExplorationPhaseNoFood(male_number, male, male_individual_fitness, new_male, female_number, female, female_individual_fitness, new_female)
+            new_male, new_female = s.ExplorationPhaseNoFood(food, male_number, male, male_individual_fitness, new_male, female_number, female, female_individual_fitness, new_female) # WOA螺旋
+
         else:
             # 当前有食物开始进入探索阶段
             # 先判断当前的温度是冷还是热
@@ -221,7 +240,7 @@ if __name__ == '__main__':
                                female_number, female_individual_fitness, new_female)
 
         # 将更新后的位置进行处理
-        male_best_fitness_individual, female_best_fitness_individual, food, gy_best, male, male_individual_fitness, male_fitness_best_value, female, female_individual_fitness, female_fitness_best_value = s.update(gy_best, O_num, e, food, male, male_number, male_individual_fitness, male_fitness_best_value, new_male, male_best_fitness_individual, female, female_number, female_individual_fitness, female_fitness_best_value, new_female, female_best_fitness_individual)
+        male_best_fitness_individual, female_best_fitness_individual, food, gy_best, male, male_individual_fitness, male_fitness_best_value, female, female_individual_fitness, female_fitness_best_value = s.update(t, gy_best, O_num, e, food, male, male_number, male_individual_fitness, male_fitness_best_value, new_male, male_best_fitness_individual, female, female_number, female_individual_fitness, female_fitness_best_value, new_female, female_best_fitness_individual)
 
 
         if gy_best < Optimal_fit:
@@ -241,6 +260,9 @@ if __name__ == '__main__':
     plt.title('the maximum completion time of each iteration')
     plt.ylabel('Cmax')
     plt.xlabel('Test Num')
-    plt.savefig('最大完成时间的优化过程.png')
+    plt.savefig('加权配套时间总和过程.png')
     plt.show()
     print("每代最好适应度Best_fit：", Best_fit)
+
+    end_time = time.time()  # 记录结束时间
+    print("程序运行时间为: {:.3f}秒".format(end_time - start_time))

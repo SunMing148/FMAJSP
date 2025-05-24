@@ -381,7 +381,7 @@ class Decode:
         # print("Matching_result_all =", Matching_result_all)
         # print("fitness=", self.fitness)   # 目标函数还是最小化最大完工时间
 
-        self.fitness = sum(index * value for index, value in enumerate(t, start=1))   #更改目标函数了
+        # self.fitness = sum(index * value for index, value in enumerate(t, start=1))   #更改目标函数了
 
         return self.fitness, Matching_result_all
 
