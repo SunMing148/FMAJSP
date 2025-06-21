@@ -11,7 +11,7 @@ from Instance_2 import *
 class SO():
     def __init__(self, Len_Chromo, k):
         self.k = k
-        self.Pop_size = 100  # 种群数量
+        self.Pop_size = 50  # 种群数量
 
         self.C1 = 0.5     #
         self.C2 = 0.05  # 之前是0.5，改成0.05好像更好了，也不一定
@@ -69,7 +69,7 @@ class SO():
         Fit = []
         for i in range(len(CHS)):
             d = Decode(J, Processing_time, M_num, self.k)
-            y, Matching_result_all = d.decode(CHS[i], Len)
+            y, Matching_result_all, t = d.decode(CHS[i], Len)
             Fit.append(y)
         return Fit
 
@@ -209,7 +209,7 @@ class SO():
             individual = np.array(new_male[j, :])[0]
             mapped_individual = e.Individual_Coding_mapping_conversion(individual)
             d = Decode(J, Processing_time, M_num, self.k)
-            y, Matching_result_all = d.decode(mapped_individual, Len)
+            y, Matching_result_all, tn = d.decode(mapped_individual, Len)
 
 
             # LOBL strategy
@@ -221,7 +221,7 @@ class SO():
             new_individual = (np.multiply(new_individual, ~(flag_low + flag_high))) + np.multiply(self.ub-0.0000001,flag_high) + np.multiply(self.lb, flag_low)
             new_mapped_individual = e.Individual_Coding_mapping_conversion(new_individual)
             d = Decode(J, Processing_time, M_num, self.k)
-            y_new, Matching_result_all = d.decode(new_mapped_individual, Len)
+            y_new, Matching_result_all, tn = d.decode(new_mapped_individual, Len)
 
             if y_new < y:
                 new_male[j, :] = new_individual
@@ -250,7 +250,7 @@ class SO():
             individual = np.array(new_female[j, :])[0]
             mapped_individual = e.Individual_Coding_mapping_conversion(individual)
             d = Decode(J, Processing_time, M_num, self.k)
-            y, Matching_result_all = d.decode(mapped_individual, Len)
+            y, Matching_result_all, tn = d.decode(mapped_individual, Len)
 
             # LOBL strategy
             k = (1 + (t / self.Max_Itertions) ** 0.5) ** 10
@@ -261,7 +261,7 @@ class SO():
             new_individual = (np.multiply(new_individual, ~(flag_low + flag_high))) + np.multiply(self.ub-0.0000001,flag_high) + np.multiply(self.lb, flag_low)
             new_mapped_individual = e.Individual_Coding_mapping_conversion(new_individual)
             d = Decode(J, Processing_time, M_num, self.k)
-            y_new, Matching_result_all = d.decode(new_mapped_individual, Len)
+            y_new, Matching_result_all, tn = d.decode(new_mapped_individual, Len)
 
             if y_new < y:
                 new_male[j, :] = new_individual

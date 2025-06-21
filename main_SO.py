@@ -16,19 +16,22 @@ def generate_color_map(k):
     # 定义色系与对应的工件ID
     job_groups = {
         'Reds': [1, 2, 3],                        # A
-        'Blues': [10, 11, 12],                    # B
-        'Greens': [19, 20, 21],                   # C
-        'Oranges': [4, 5, 6, 13, 14, 15],         # D
-        'Purples': [22, 23, 24],                  # E
-        'YlOrBr': [7, 8, 9, 16, 17, 18],          # F
-        'PuBu': [25, 26, 27]                      # G
+        'Blues': [11, 12, 13],                    # B
+        'Greens': [21, 22, 23],                   # C
+        'Oranges': [4, 5, 6, 14, 15, 16],         # D
+        'Purples': [24, 25, 26],                  # E
+        'YlOrBr': [7, 8, 9, 17, 18, 19],          # F
+        'PuBu': [27, 28, 29],                     # G
+        'Greys': [10],                            # M1
+        'BuGn': [20],                             # M2
+        'RdPu': [30]                              # M3
     }
 
     # 遍历job_groups中的每个键值对
     for key, values in job_groups.items():
         original_values = values[:]  # 保存原始数组的副本
         for i in range(1, k):  # 从1到k-1，逐次添加新元素
-            new_values = [x + 27 * i for x in original_values]  # 计算新的元素值
+            new_values = [x + 30 * i for x in original_values]  # 计算新的元素值
             job_groups[key].extend(new_values)  # 将新元素添加到数组中
 
     # 创建颜色映射表
@@ -43,13 +46,13 @@ def generate_color_map(k):
         for i, job_id in enumerate(jobs):
             # 使用颜色映射的前80%颜色，避免最浅和最深的颜色
             # 这里使用了线性插值来确保颜色分布在色带的中间部分
-            color = cmap(i / (len(jobs) - 1) * 0.4 + 0.3)
+            color = cmap(i / (len(jobs)) * 0.4 + 0.3)
             color_map[job_id] = color
 
     return color_map, job_groups
 
 #v3
-def Gantt(Machines,k):
+def Gantt(Machines,k,tn):
     color_map, job_groups = generate_color_map(k)
 
     # 设置画布大小
@@ -58,7 +61,7 @@ def Gantt(Machines,k):
 
     group_spacing = 2  # 组之间的间距
     # machine_offset = {1: 0, 15: group_spacing, 22: group_spacing}
-    machine_offset = {1: 0, 15: group_spacing, 18: 0.3, 21: 0.3,22: group_spacing}
+    machine_offset = {1: 0, 15: group_spacing, 18: 0.3, 21: 0.3, 22: group_spacing, 26: group_spacing}
 
     ans = []
 
@@ -92,8 +95,14 @@ def Gantt(Machines,k):
                 b = f"P{job_serial_number}F"
             elif job_serial_number in job_groups['PuBu']:
                 b = f"P{job_serial_number}G"
+            elif job_serial_number in job_groups['Greys']:
+                b = f"P{job_serial_number}MTZ1"
+            elif job_serial_number in job_groups['BuGn']:
+                b = f"P{job_serial_number}MTZ2"
+            elif job_serial_number in job_groups['RdPu']:
+                b = f"P{job_serial_number}MTZ3"
 
-            if machine_id in (14,21,25):
+            if machine_id in (14,21,25,26):
                 b = 'F' + b[1:]
 
             # 绘制甘特条
@@ -118,24 +127,34 @@ def Gantt(Machines,k):
     for i, machine in enumerate(Machines, start=1):
         adjusted_index = i - 1 + sum([offset for key, offset in machine_offset.items() if i >= key])
         yticks.append(adjusted_index)
-        yticklabels.append('{}'.format(i))
+        yticklabels.append('M{}'.format(i))
 
     plt.yticks(yticks, yticklabels)
 
     # 添加组标签
     group_labels = {
-        'Proxima Sensor Line': (0 + 14) / 2 - 0.5,  # 第一组中间位置
-        'Mechanism Line': (15 + 21) / 2 - 1 + group_spacing +0.4,  # 第二组中间位置，考虑偏移
-        'Arc Chute Line': (22 + 25) / 2 + 1  + group_spacing +0.8  # 第三组中间位置，考虑偏移
+        'Line1': (0 + 14) / 2 - 0.5,  # 第一组中间位置
+        'Line2': (15 + 21) / 2 - 1 + group_spacing + 0.4,  # 第二组中间位置，考虑偏移
+        'Line3': (22 + 25) / 2 + 1  + group_spacing + 0.8,  # 第三组中间位置，考虑偏移
+        'Line4': (26 + 26) / 2 + 1 + group_spacing + 2.8  # 第三组中间位置，考虑偏移
     }
 
     # 绘制组标签
     for label, position in group_labels.items():
         # plt.text(-0.3, position, label, fontsize=8, rotation=90, va='center', ha='right')  # 适用成品少
-        plt.text(-1.2, position, label, fontsize=12, rotation=90, va='center', ha='right')    # 适用成品多
+        plt.text(-1.5, position, label, fontsize=12, rotation=90, va='center', ha='right')    # 适用成品多
+
+    # 在横轴上标出tn数组中的各个时刻，并画垂直虚线
+    for t in tn:
+        t_rounded = round(t, 2)  # 保留两位小数
+        plt.axvline(x=t_rounded, color='gray', linestyle='--', linewidth=0.8)
+        plt.text(x=t_rounded+0.2, y=-1.2, s=f'{t_rounded:.2f}', ha='center', va='top', fontsize=12)  # 标记在下方
+    # 调整横轴范围，避免遮挡
+    # plt.ylim(-1.5, plt.ylim()[1])  # 为下方标记留出空间
+
     # 添加标题和坐标轴标签
     # plt.title('Scheduling Gantt chart')
-    plt.ylabel('Line & Machines', labelpad=20, fontsize=12)
+    plt.ylabel('Line', labelpad=20, fontsize=12)
     plt.xlabel('makespan (minute)', fontsize=12)
     # 保存并显示图像
     plt.tight_layout()
@@ -169,10 +188,11 @@ if __name__ == '__main__':
     food = X[g_best, :]   # 种群初始化时的最优个体
     food_mapped_individual = e.Individual_Coding_mapping_conversion(food)
     d = Decode(J, Processing_time, M_num, k)
-    y, Matching_result_all = d.decode(food_mapped_individual, O_num)
+    y, Matching_result_all, tn = d.decode(food_mapped_individual, O_num)
     print("种群初始时food的适应度：",y)
     # Gantt(d.Machines,k)   # 种群初始化时的最优个体 解码后 对应的甘特图
     print("总配套关系为：", Matching_result_all)
+    print("配套时刻：", tn)
 
     # 将种群进行分离,一半归为雌性，一半归为雄性
     male_number = int(np.round(s.Pop_size / 2))
@@ -248,9 +268,10 @@ if __name__ == '__main__':
             #food 就是最优个体
             food_mapped_individual1 = e.Individual_Coding_mapping_conversion(food)
             d = Decode(J, Processing_time, M_num, k)
-            y, Matching_result_all = d.decode(food_mapped_individual1, O_num)
-            Gantt(d.Machines,k)  # 种群初始化时的最优个体 解码后 对应的甘特图
+            y, Matching_result_all, tn = d.decode(food_mapped_individual1, O_num)
+            Gantt(d.Machines,k,tn)  # 种群初始化时的最优个体 解码后 对应的甘特图
             print("总配套关系为：",Matching_result_all)
+            print("配套时刻为：",tn)
 
         print("当前代最优适应度：", round(gy_best, 3))
         Best_fit.append(round(gy_best, 3))

@@ -25,72 +25,87 @@ class Decode:
         for k, v in J.items():
             self.Jobs.append(Job(k, v))          # 为每一个工件都创建了一个Job对象
 
-        self.Ap=[5,14,23]  # 机器21装配工序 （第一次装配工序） 对应的Job编号（编号减1）
+        self.Ap=[5,15,25,9,19,29]  # 机器21装配工序 （第一次装配工序） 对应的Job编号（编号减1）
         temp_Ap = copy.deepcopy(self.Ap)
         for i in range(1, self.k):  # 从1到k-1，逐次添加新元素
-            new_values = [x + 27 * i for x in temp_Ap]  # 计算新的元素值
+            new_values = [x + 30 * i for x in temp_Ap]  # 计算新的元素值
             self.Ap.extend(new_values)  # 将新元素添加到数组中
 
-        self.D = [6, 15]
+        self.D = [6, 16]
         temp_D = copy.deepcopy(self.D)
         for i in range(1, self.k):  # 从1到k-1，逐次添加新元素
-            new_values = [x + 27 * i for x in temp_D]  # 计算新的元素值
+            new_values = [x + 30 * i for x in temp_D]  # 计算新的元素值
             self.D.extend(new_values)  # 将新元素添加到数组中
 
-        self.E = [24]
+        self.E = [26]
         temp_E = copy.deepcopy(self.E)
         for i in range(1, self.k):  # 从1到k-1，逐次添加新元素
-            new_values = [x + 27 * i for x in temp_E]  # 计算新的元素值
+            new_values = [x + 30 * i for x in temp_E]  # 计算新的元素值
             self.E.extend(new_values)  # 将新元素添加到数组中
 
-        self.D_component1 = [4, 13]
+        self.D_component1 = [4, 14]
         temp_D_component1 = copy.deepcopy(self.D_component1)
         for i in range(1, self.k):  # 从1到k-1，逐次添加新元素
-            new_values = [x + 27 * i for x in temp_D_component1]  # 计算新的元素值
+            new_values = [x + 30 * i for x in temp_D_component1]  # 计算新的元素值
             self.D_component1.extend(new_values)  # 将新元素添加到数组中
 
-        self.D_component2 = [5, 14]
+        self.D_component2 = [5, 15]
         temp_D_component2 = copy.deepcopy(self.D_component2)
         for i in range(1, self.k):  # 从1到k-1，逐次添加新元素
-            new_values = [x + 27 * i for x in temp_D_component2]  # 计算新的元素值
+            new_values = [x + 30 * i for x in temp_D_component2]  # 计算新的元素值
             self.D_component2.extend(new_values)  # 将新元素添加到数组中
 
-        self.E_component1 = [22]
+        self.E_component1 = [24]
         temp_E_component1 = copy.deepcopy(self.E_component1)
         for i in range(1, self.k):  # 从1到k-1，逐次添加新元素
-            new_values = [x + 27 * i for x in temp_E_component1]  # 计算新的元素值
+            new_values = [x + 30 * i for x in temp_E_component1]  # 计算新的元素值
             self.E_component1.extend(new_values)  # 将新元素添加到数组中
 
-        self.E_component2 = [23]
+        self.E_component2 = [25]
         temp_E_component2 = copy.deepcopy(self.E_component2)
         for i in range(1, self.k):  # 从1到k-1，逐次添加新元素
-            new_values = [x + 27 * i for x in temp_E_component2]  # 计算新的元素值
+            new_values = [x + 30 * i for x in temp_E_component2]  # 计算新的元素值
             self.E_component2.extend(new_values)  # 将新元素添加到数组中
 
         self.A = [1, 2, 3]
         for i in range(1, self.k):  # 从1到k-1，逐次添加新元素
-            new_values = [x + 27 * i for x in copy.deepcopy(self.A)]  # 计算新的元素值
+            new_values = [x + 30 * i for x in copy.deepcopy(self.A)]  # 计算新的元素值
             self.A.extend(new_values)  # 将新元素添加到数组中
 
-        self.B = [10, 11, 12]
+        self.B = [11, 12, 13]
         for i in range(1, self.k):  # 从1到k-1，逐次添加新元素
-            new_values = [x + 27 * i for x in copy.deepcopy(self.B)]  # 计算新的元素值
+            new_values = [x + 30 * i for x in copy.deepcopy(self.B)]  # 计算新的元素值
             self.B.extend(new_values)  # 将新元素添加到数组中
 
-        self.C = [19, 20, 21]
+        self.C = [21, 22, 23]
         for i in range(1, self.k):  # 从1到k-1，逐次添加新元素
-            new_values = [x + 27 * i for x in copy.deepcopy(self.C)]  # 计算新的元素值
+            new_values = [x + 30 * i for x in copy.deepcopy(self.C)]  # 计算新的元素值
             self.C.extend(new_values)  # 将新元素添加到数组中
 
         self.F = [7, 8, 9]
         for i in range(1, self.k):  # 从1到k-1，逐次添加新元素
-            new_values = [x + 27 * i for x in copy.deepcopy(self.F)]  # 计算新的元素值
+            new_values = [x + 30 * i for x in copy.deepcopy(self.F)]  # 计算新的元素值
             self.F.extend(new_values)  # 将新元素添加到数组中
 
-        self.G = [16, 17, 18, 25, 26, 27]
+        self.G = [17, 18, 19, 27, 28, 29]
         for i in range(1, self.k):  # 从1到k-1，逐次添加新元素
-            new_values = [x + 27 * i for x in copy.deepcopy(self.G)]  # 计算新的元素值
+            new_values = [x + 30 * i for x in copy.deepcopy(self.G)]  # 计算新的元素值
             self.G.extend(new_values)  # 将新元素添加到数组中
+
+        self.M1 = [10]
+        for i in range(1, self.k):  # 从1到k-1，逐次添加新元素
+            new_values = [x + 30 * i for x in copy.deepcopy(self.M1)]  # 计算新的元素值
+            self.M1.extend(new_values)  # 将新元素添加到数组中
+
+        self.M2 = [20]
+        for i in range(1, self.k):  # 从1到k-1，逐次添加新元素
+            new_values = [x + 30 * i for x in copy.deepcopy(self.M2)]  # 计算新的元素值
+            self.M2.extend(new_values)  # 将新元素添加到数组中
+
+        self.M3 = [30]
+        for i in range(1, self.k):  # 从1到k-1，逐次添加新元素
+            new_values = [x + 30 * i for x in copy.deepcopy(self.M3)]  # 计算新的元素值
+            self.M3.extend(new_values)  # 将新元素添加到数组中
 
     def find_earliest_completion(self,machine_data, component_list):
         """
@@ -174,6 +189,10 @@ class Decode:
             'E': self.E,
             'F': self.F,
             'G': self.G,
+            'M1': self.M1,
+            'M2': self.M2,
+            'M3': self.M3,
+
         }
         component_type = {}
         for type_name, nums in groups.items():
@@ -196,14 +215,14 @@ class Decode:
 
         # 成品需求及组件顺序
         product_requirements = {
-            'O': {'A': 3, 'D': 1, 'F': 3},
-            'P': {'B': 3, 'D': 1, 'G': 3},
-            'Q': {'C': 3, 'E': 1, 'G': 3}
+            'MTZ1': {'A': 3, 'D': 1, 'F': 3},
+            'MTZ2': {'B': 3, 'D': 1, 'G': 3},
+            'MTZ3': {'C': 3, 'E': 1, 'G': 3}
         }
         req_order = {
-            'O': ['A', 'D', 'F'],
-            'P': ['B', 'D', 'G'],
-            'Q': ['C', 'E', 'G']
+            'MTZ1': ['A', 'D', 'F'],
+            'MTZ2': ['B', 'D', 'G'],
+            'MTZ3': ['C', 'E', 'G']
         }
 
         t = []
@@ -212,7 +231,7 @@ class Decode:
         for step in range(1, self.n + 1):
             candidates = []
             # 检查每个成品是否可生产
-            for product in ['O', 'P', 'Q']:
+            for product in ['MTZ1', 'MTZ2', 'MTZ3']:
                 req = product_requirements[product]
                 # 检查组件是否足够
                 valid = True
@@ -239,7 +258,7 @@ class Decode:
                 break  # 理论上不会发生
 
             # 选择时间最早且优先级高的成品
-            candidates.sort(key=lambda x: (x[0], ['O', 'P', 'Q'].index(x[1])))
+            candidates.sort(key=lambda x: (x[0], ['MTZ1', 'MTZ2', 'MTZ3'].index(x[1])))
             selected_time, selected_product, selected_components = candidates[0]
 
             t.append(selected_time)
@@ -373,15 +392,36 @@ class Decode:
         Machine_processing_data_21 = [[pair[0], c_val] for pair, c_val in zip(h, g)]
         Machine_processing_data_14 = [[pair[0], c_val] for pair, c_val in zip(j, i)]
 
-        t, Matching_result_all = self.calculate_schedule(Machine_processing_data_14, Machine_processing_data_21,
+        tn, Matching_result_all = self.calculate_schedule(Machine_processing_data_14, Machine_processing_data_21,
                                                          Machine_processing_data_25, Matching_result_21)
 
-        # print("Matching_result_21:", Matching_result_21)
-        # print("t =", t)
-        # print("Matching_result_all =", Matching_result_all)
-        # print("fitness=", self.fitness)   # 目标函数还是最小化最大完工时间
 
-        # self.fitness = sum(index * value for index, value in enumerate(t, start=1))   #更改目标函数了
+        M1 = copy.deepcopy(self.M1)
+        M2 = copy.deepcopy(self.M2)
+        M3 = copy.deepcopy(self.M3)
+        i = 0
+        for item in Matching_result_all:
+            if item[0][1] == 'MTZ1':
+                current_job = M1.pop(0) - 1
+            elif item[0][1] == 'MTZ2':
+                current_job = M2.pop(0) - 1
+            elif item[0][1] == 'MTZ3':
+                current_job = M3.pop(0) - 1
+            O_num = self.Jobs[current_job].Current_Processed()  # 现在加工的工序 当前工件的第几道工序
+            Machine = JM[current_job][O_num]  # 用基因的OS部分的工件序号以及工序序号索引机器顺序矩阵的机器序号
+            P_t = self.Processing_time[current_job][O_num][Machine]  # P_t对应具体工件的工序的具体机器加工时间
+            Machine_end_time = self.Machines[Machine].End_time
+            start = max(Machine_end_time, tn[i])
+            End_work_time = start + P_t
+            self.Jobs[current_job]._Input(start, End_work_time, Machine)  # 工件完成该工序
+            if End_work_time > self.fitness:
+                self.fitness = End_work_time
+            self.Machines[Machine]._Input(current_job, start, P_t, O_num)  # 机器完成该工件该工序
 
-        return self.fitness, Matching_result_all
+            Matching_result_all[i][0] = Matching_result_all[i][0] + (current_job+1,)   # 总配套关系加上成品工件号
+
+            i=i+1
+
+
+        return self.fitness, Matching_result_all, tn
 
