@@ -225,7 +225,7 @@ class Decode:
             'MTZ3': ['C', 'E', 'G']
         }
 
-        t = []
+        tn = []
         Matching_result_all = []  # 总装配套结果
 
         for step in range(1, self.n + 1):
@@ -261,7 +261,7 @@ class Decode:
             candidates.sort(key=lambda x: (x[0], ['MTZ1', 'MTZ2', 'MTZ3'].index(x[1])))
             selected_time, selected_product, selected_components = candidates[0]
 
-            t.append(selected_time)
+            tn.append(round(selected_time, 2))   # 保留两位小数
 
             # 构建配套信息
             parts = []
@@ -284,7 +284,7 @@ class Decode:
                 # 用a中对应的元组替换原元组
                 entry[2] = Matching_result_21_dict[key]
 
-        return t, Matching_result_all
+        return tn, Matching_result_all
 
     # 解码操作
     def decode(self, CHS, Len_Chromo):

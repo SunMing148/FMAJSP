@@ -1,4 +1,3 @@
-import itertools
 import math
 import random
 
@@ -17,11 +16,11 @@ class SO():
         self.C2 = 0.05  # 之前是0.5，改成0.05好像更好了，也不一定
         self.C3 = 2  #
 
-        self.food_threshold = 0.25        # 有没有食物的阈值
+        self.food_threshold = 0.28        # 有没有食物的阈值
         self.temp_threshold = 0.6         # 温度适不适合交配的阈值
-        self.model_threshold = 0.6        # 模式阈值,当产生的随机值小于模式阈值就进入战斗模式，否则就进入交配模式
+        self.model_threshold = 0.62        # 模式阈值,当产生的随机值小于模式阈值就进入战斗模式，否则就进入交配模式
 
-        self.Max_Itertions = 100  # 最大迭代次数
+        self.Max_Itertions = 125  # 最大迭代次数
         self.Len_Chromo = Len_Chromo
 
         self.vec_flag = [1, -1]
@@ -69,7 +68,7 @@ class SO():
         Fit = []
         for i in range(len(CHS)):
             d = Decode(J, Processing_time, M_num, self.k)
-            y, Matching_result_all, t = d.decode(CHS[i], Len)
+            y, Matching_result_all, tn = d.decode(CHS[i], Len)
             Fit.append(y)
         return Fit
 
@@ -307,17 +306,4 @@ class SO():
 
 
         return male_best_fitness_individual, female_best_fitness_individual, food, gy_best, male, male_individual_fitness, male_fitness_best_value, female, female_individual_fitness, female_fitness_best_value
-
-
-
-
-
-
-
-
-
-
-
-
-
 
