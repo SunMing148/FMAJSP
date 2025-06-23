@@ -106,9 +106,9 @@ MTZ1_PT = [A_PT]*3 + [D1_PT] + [D2_PT] + [D3_PT] + [F_PT]*3 + [M1_PT]
 MTZ2_PT = [B_PT]*3 + [D1_PT] + [D2_PT] + [D3_PT] + [G_PT]*3 + [M2_PT]
 MTZ3_PT = [C_PT]*3 + [E1_PT] + [E2_PT] + [E3_PT] + [G_PT]*3 + [M3_PT]
 
-k1=7     #生产MTZ1的数量
-k2=9     #生产MTZ2的数量
-k3=5     #生产MTZ3的数量
+k1=3     #生产MTZ1的数量
+k2=4     #生产MTZ2的数量
+k3=2     #生产MTZ3的数量
 
 Processing_time = MTZ1_PT*k1 + MTZ2_PT*k2 + MTZ3_PT*k3
 

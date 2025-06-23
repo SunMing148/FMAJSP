@@ -64,8 +64,8 @@ class SO():
         CHS = e.Coding_mapping_conversion(CHS)
         Fit = []
         for i in range(len(CHS)):
-            d = Decode(J, Processing_time, M_num, self.k)
-            y, Matching_result_all = d.decode(CHS[i], Len)
+            d = Decode(J, Processing_time, M_num)
+            y, Matching_result_all, tn = d.decode(CHS[i], Len)
             Fit.append(y)
         return Fit
 
@@ -204,8 +204,8 @@ class SO():
             # 计算雄性种群中每一个个体的适应度（这个是被更新过位置的）
             individual = np.array(new_male[j, :])[0]
             mapped_individual = e.Individual_Coding_mapping_conversion(individual)
-            d = Decode(J, Processing_time, M_num, self.k)
-            y, Matching_result_all = d.decode(mapped_individual, Len)
+            d = Decode(J, Processing_time, M_num)
+            y, Matching_result_all,tn = d.decode(mapped_individual, Len)
 
 
             # # LOBL strategy
@@ -245,8 +245,8 @@ class SO():
             # 计算雄性种群中每一个个体的适应度（这个是被更新过位置的）
             individual = np.array(new_female[j, :])[0]
             mapped_individual = e.Individual_Coding_mapping_conversion(individual)
-            d = Decode(J, Processing_time, M_num, self.k)
-            y, Matching_result_all = d.decode(mapped_individual, Len)
+            d = Decode(J, Processing_time, M_num)
+            y, Matching_result_all, tn = d.decode(mapped_individual, Len)
 
             # # LOBL strategy
             # k = (1 + (t / self.Max_Itertions) ** 0.5) ** 10
