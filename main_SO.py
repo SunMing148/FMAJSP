@@ -1,38 +1,30 @@
 import math
 import random
 import time
-
 import matplotlib.pyplot as plt
 import numpy as np
-
 from Decode import Decode
 from Encode import Encode
-from SO import SO            # 导入此是改进的ISO
-# from SO_beifen import SO   # 导入此是未改进的标准SO
-from Instance_2 import *
+from ISO import SO    # 导入此是改进的ISO
+# from SO import SO   # 导入此是未改进的标准SO
+
+from Instance import Job_serial_number, Processing_time, J, J_num, M_num, O_num
 
 
-def generate_color_map(k):
+def generate_color_map():
     # 定义色系与对应的工件ID
     job_groups = {
-        'Reds': [1, 2, 3],                        # A
-        'Blues': [11, 12, 13],                    # B
-        'Greens': [21, 22, 23],                   # C
-        'Oranges': [4, 5, 6, 14, 15, 16],         # D
-        'Purples': [24, 25, 26],                  # E
-        'YlOrBr': [7, 8, 9, 17, 18, 19],          # F
-        'PuBu': [27, 28, 29],                     # G
-        'Greys': [10],                            # M1
-        'BuGn': [20],                             # M2
-        'RdPu': [30]                              # M3
+        'Reds': Job_serial_number["A"],                        # A
+        'Blues': Job_serial_number["B"],                    # B
+        'Greens': Job_serial_number["C"],                   # C
+        'Oranges': Job_serial_number["D"] + Job_serial_number["D_component1"] + Job_serial_number["D_component2"],         # D
+        'Purples': Job_serial_number["E"] + Job_serial_number["E_component1"] + Job_serial_number["E_component2"],                  # E
+        'YlOrBr': Job_serial_number["F"],          # F
+        'PuBu': Job_serial_number["G"],                     # G
+        'Greys': Job_serial_number["M1"],                            # M1
+        'BuGn': Job_serial_number["M2"],                             # M2
+        'RdPu': Job_serial_number["M3"]                              # M3
     }
-
-    # 遍历job_groups中的每个键值对
-    for key, values in job_groups.items():
-        original_values = values[:]  # 保存原始数组的副本
-        for i in range(1, k):  # 从1到k-1，逐次添加新元素
-            new_values = [x + 30 * i for x in original_values]  # 计算新的元素值
-            job_groups[key].extend(new_values)  # 将新元素添加到数组中
 
     # 创建颜色映射表
     color_map = {}
@@ -52,8 +44,8 @@ def generate_color_map(k):
     return color_map, job_groups
 
 #v3
-def Gantt(Machines,k,tn):
-    color_map, job_groups = generate_color_map(k)
+def Gantt(Machines,tn):
+    color_map, job_groups = generate_color_map()
 
     # 设置画布大小
     plt.figure(figsize=(20, 10), dpi=300)
@@ -118,7 +110,6 @@ def Gantt(Machines,k,tn):
 
         ans.append(mi)
 
-    # print("每台机器上工件的加工顺序：",ans)
 
     # 设置Y轴刻度标签
     yticks = []
@@ -162,359 +153,6 @@ def Gantt(Machines,k,tn):
 
     return ans
 
-# v4
-# def Gantt(Machines, k, tn):
-#     color_map, job_groups = generate_color_map(k)
-#
-#     # 分离机器数据
-#     main_machines = Machines[:25]  # 前25台机器 (Line1-Line3)
-#     line4_machine = Machines[25:]  # 第26台机器 (Line4)
-#
-#     # ==============================================
-#     # 绘制主甘特图 (Line1-Line3)
-#     # ==============================================
-#     plt.figure(figsize=(20, 10), dpi=300)
-#     group_spacing = 2  # 组之间的间距
-#     machine_offset = {1: 0, 15: group_spacing, 18: 0.3, 21: 0.3, 22: group_spacing, 26: group_spacing}
-#     ans = []
-#
-#     for machine_index, Machine in enumerate(main_machines):
-#         start_times = Machine.O_start
-#         end_times = Machine.O_end
-#
-#         # 计算当前机器的实际绘图位置
-#         machine_id = machine_index + 1
-#         adjusted_index = machine_index + sum([offset for key, offset in machine_offset.items() if machine_id >= key])
-#
-#         mi = []
-#         mi.append(machine_id)
-#
-#         for task_index, (start, end) in enumerate(zip(start_times, end_times)):
-#             job_serial_number = Machine.assigned_task[task_index][0]
-#             color = color_map.get(job_serial_number, 'gray')
-#
-#             if job_serial_number in job_groups['Reds']:
-#                 b = f"P{job_serial_number}A"
-#             elif job_serial_number in job_groups['Blues']:
-#                 b = f"P{job_serial_number}B"
-#             elif job_serial_number in job_groups['Greens']:
-#                 b = f"P{job_serial_number}C"
-#             elif job_serial_number in job_groups['Oranges']:
-#                 b = f"P{job_serial_number}D"
-#             elif job_serial_number in job_groups['Purples']:
-#                 b = f"P{job_serial_number}E"
-#             elif job_serial_number in job_groups['YlOrBr']:
-#                 b = f"P{job_serial_number}F"
-#             elif job_serial_number in job_groups['PuBu']:
-#                 b = f"P{job_serial_number}G"
-#             elif job_serial_number in job_groups['Greys']:
-#                 b = f"P{job_serial_number}MTZ1"
-#             elif job_serial_number in job_groups['BuGn']:
-#                 b = f"P{job_serial_number}MTZ2"
-#             elif job_serial_number in job_groups['RdPu']:
-#                 b = f"P{job_serial_number}MTZ3"
-#
-#             if machine_id in (14, 21, 25, 26):
-#                 b = 'F' + b[1:]
-#
-#             # 绘制甘特条
-#             plt.barh(adjusted_index, width=end - start, height=0.8, left=start,
-#                      color=color, edgecolor='black')
-#             plt.text(x=start + (end - start) / 2, y=adjusted_index,
-#                      s=b, va='center', ha='center')
-#
-#             mi.append(b)
-#
-#         ans.append(mi)
-#
-#     print("每台机器上工件的加工顺序：", ans)
-#
-#     # 设置Y轴刻度标签
-#     yticks = []
-#     yticklabels = []
-#     for i, machine in enumerate(main_machines, start=1):
-#         adjusted_index = i - 1 + sum([offset for key, offset in machine_offset.items() if i >= key])
-#         yticks.append(adjusted_index)
-#         yticklabels.append('M{}'.format(i))
-#
-#     plt.yticks(yticks, yticklabels)
-#
-#     # 添加组标签
-#     group_labels = {
-#         'Line1': (0 + 14) / 2 - 0.5,
-#         'Line2': (15 + 21) / 2 - 1 + group_spacing + 0.4,
-#         'Line3': (22 + 25) / 2 + 1 + group_spacing + 0.8
-#     }
-#
-#     for label, position in group_labels.items():
-#         plt.text(-1.5, position, label, fontsize=12, rotation=90, va='center', ha='right')
-#
-#     # 在横轴上标出tn数组中的各个时刻，并画垂直虚线
-#     for t in tn:
-#         t_rounded = round(t, 2)
-#         plt.axvline(x=t_rounded, color='gray', linestyle='--', linewidth=0.8)
-#         plt.text(x=t_rounded + 0.2, y=-1.2, s=f'{t_rounded:.2f}', ha='center', va='top', fontsize=12)
-#
-#     plt.ylabel('Line', labelpad=20, fontsize=12)
-#     plt.xlabel('makespan (minute)', fontsize=12)
-#     plt.tight_layout()
-#     plt.savefig('优化后排程方案的甘特图_主产线.png', bbox_inches='tight')
-#     plt.show()
-#
-#     # ==============================================
-#     # 绘制Line4甘特图 (单独的第26台机器)
-#     # ==============================================
-#     if line4_machine:  # 确保有第26台机器数据
-#         plt.figure(figsize=(20, 2), dpi=300)  # 较小的图高度，因为只有一台机器
-#
-#         Machine = line4_machine[0]
-#         start_times = Machine.O_start
-#         end_times = Machine.O_end
-#
-#         mi = []
-#         mi.append(26)  # 机器编号
-#
-#         for task_index, (start, end) in enumerate(zip(start_times, end_times)):
-#             job_serial_number = Machine.assigned_task[task_index][0]
-#             color = color_map.get(job_serial_number, 'gray')
-#
-#             if job_serial_number in job_groups['Reds']:
-#                 b = f"P{job_serial_number}A"
-#             elif job_serial_number in job_groups['Blues']:
-#                 b = f"P{job_serial_number}B"
-#             elif job_serial_number in job_groups['Greens']:
-#                 b = f"P{job_serial_number}C"
-#             elif job_serial_number in job_groups['Oranges']:
-#                 b = f"P{job_serial_number}D"
-#             elif job_serial_number in job_groups['Purples']:
-#                 b = f"P{job_serial_number}E"
-#             elif job_serial_number in job_groups['YlOrBr']:
-#                 b = f"P{job_serial_number}F"
-#             elif job_serial_number in job_groups['PuBu']:
-#                 b = f"P{job_serial_number}G"
-#             elif job_serial_number in job_groups['Greys']:
-#                 b = f"P{job_serial_number}MTZ1"
-#             elif job_serial_number in job_groups['BuGn']:
-#                 b = f"P{job_serial_number}MTZ2"
-#             elif job_serial_number in job_groups['RdPu']:
-#                 b = f"P{job_serial_number}MTZ3"
-#
-#             b = 'F' + b[1:]  # 第26台机器是F开头
-#
-#             # 绘制甘特条，x轴从tn[0]开始
-#             plt.barh(0, width=end - start, height=0.8, left=start,
-#                      color=color, edgecolor='black')
-#             plt.text(x=start + (end - start) / 2, y=0,
-#                      s=b, va='center', ha='center')
-#
-#             mi.append(b)
-#
-#         print("Line4机器上工件的加工顺序：", mi)
-#
-#         # 设置Y轴
-#         plt.yticks([0], ['M26'])
-#
-#         # 设置X轴从tn[0]开始
-#         plt.xlim(left=tn[0])
-#
-#         # 添加组标签
-#         # plt.text(-1.5, 0, 'Line4', fontsize=12, rotation=90, va='center', ha='right')
-#
-#         # 在横轴上标出tn数组中的各个时刻，并画垂直虚线
-#         for t in tn:
-#             if t >= tn[0]:  # 只显示大于等于起始时间的标记
-#                 t_rounded = round(t, 2)
-#                 plt.axvline(x=t_rounded, color='gray', linestyle='--', linewidth=0.8)
-#                 plt.text(x=t_rounded + 0.2, y=-0.8, s=f'{t_rounded:.2f}', ha='center', va='top', fontsize=12)
-#
-#         plt.ylabel('Line', labelpad=20, fontsize=12)
-#         plt.xlabel('makespan (minute)', fontsize=12)
-#         plt.tight_layout()
-#         plt.savefig('优化后排程方案的甘特图_Line4.png', bbox_inches='tight')
-#         plt.show()
-
-# # v5
-# def Gantt(Machines, k, tn):
-#     color_map, job_groups = generate_color_map(k)
-#
-#     # 分离机器数据
-#     main_machines = Machines[:25]  # 前25台机器 (Line1-Line3)
-#     line4_machine = Machines[25:]  # 第26台机器 (Line4)
-#
-#     # 计算全局时间范围
-#     all_start = min([min(machine.O_start) for machine in Machines])
-#     all_end = max([max(machine.O_end) for machine in Machines])
-#     time_range = all_end - all_start
-#
-#     # 设置统一的图形参数
-#     common_params = {
-#         'figsize': (20, 10),  # 统一图形大小
-#         'dpi': 300,
-#         'bar_height': 0.8,
-#         'fontsize': 12,
-#         'time_marker_offset': -1.2,
-#         'group_label_offset': -1.5,
-#         'time_range_padding': 0.1 * time_range  # 时间轴两侧留10%空白
-#     }
-#
-#     # ==============================================
-#     # 绘制主甘特图 (Line1-Line3)
-#     # ==============================================
-#     plt.figure(figsize=common_params['figsize'], dpi=common_params['dpi'])
-#
-#     machine_offset = {1: 0, 15: 2, 18: 0.3, 21: 0.3, 22: 2, 26: 2}
-#     ans = []
-#
-#     for machine_index, Machine in enumerate(main_machines):
-#         start_times = Machine.O_start
-#         end_times = Machine.O_end
-#
-#         # 计算当前机器的实际绘图位置
-#         machine_id = machine_index + 1
-#         adjusted_index = machine_index + sum([offset for key, offset in machine_offset.items() if machine_id >= key])
-#
-#         mi = []
-#         mi.append(machine_id)
-#
-#         for task_index, (start, end) in enumerate(zip(start_times, end_times)):
-#             job_serial_number = Machine.assigned_task[task_index][0]
-#             color = color_map.get(job_serial_number, 'gray')
-#             b = get_job_label(job_serial_number, job_groups, machine_id)
-#
-#             # 绘制甘特条
-#             plt.barh(adjusted_index, width=end - start, height=common_params['bar_height'],
-#                      left=start, color=color, edgecolor='black')
-#             plt.text(x=start + (end - start) / 2, y=adjusted_index,
-#                      s=b, va='center', ha='center', fontsize=common_params['fontsize'])
-#
-#             mi.append(b)
-#
-#         ans.append(mi)
-#
-#     print("每台机器上工件的加工顺序：", ans)
-#
-#     # 设置Y轴刻度标签
-#     yticks = []
-#     yticklabels = []
-#     for i, machine in enumerate(main_machines, start=1):
-#         adjusted_index = i - 1 + sum([offset for key, offset in machine_offset.items() if i >= key])
-#         yticks.append(adjusted_index)
-#         yticklabels.append('M{}'.format(i))
-#
-#     plt.yticks(yticks, yticklabels, fontsize=common_params['fontsize'])
-#
-#     # 添加组标签
-#     group_labels = {
-#         'Line1': (0 + 14) / 2 - 0.5,
-#         'Line2': (15 + 21) / 2 - 1 + 2 + 0.4,
-#         'Line3': (22 + 25) / 2 + 1 + 2 + 0.8
-#     }
-#
-#     for label, position in group_labels.items():
-#         plt.text(common_params['group_label_offset'], position, label,
-#                  fontsize=common_params['fontsize'], rotation=90, va='center', ha='right')
-#
-#     # 设置统一的时间轴范围
-#     plt.xlim([all_start - common_params['time_range_padding'],
-#               all_end + common_params['time_range_padding']])
-#
-#     # 在横轴上标出tn数组中的各个时刻，并画垂直虚线
-#     for t in tn:
-#         t_rounded = round(t, 2)
-#         plt.axvline(x=t_rounded, color='gray', linestyle='--', linewidth=0.8)
-#         plt.text(x=t_rounded + 0.2, y=common_params['time_marker_offset'],
-#                  s=f'{t_rounded:.2f}', ha='center', va='top',
-#                  fontsize=common_params['fontsize'])
-#
-#     plt.ylabel('Line', labelpad=20, fontsize=common_params['fontsize'])
-#     plt.xlabel('makespan (minute)', fontsize=common_params['fontsize'])
-#     plt.tight_layout()
-#     plt.savefig('优化后排程方案的甘特图_主产线.png', bbox_inches='tight')
-#     plt.show()
-#
-#     # ==============================================
-#     # 绘制Line4甘特图 (单独的第26台机器)
-#     # ==============================================
-#     if line4_machine:
-#         plt.figure(figsize=(common_params['figsize'][0], 3),  # 保持宽度一致，调整高度
-#                    dpi=common_params['dpi'])
-#
-#         Machine = line4_machine[0]
-#         start_times = Machine.O_start
-#         end_times = Machine.O_end
-#
-#         mi = []
-#         mi.append(26)
-#
-#         for task_index, (start, end) in enumerate(zip(start_times, end_times)):
-#             job_serial_number = Machine.assigned_task[task_index][0]
-#             color = color_map.get(job_serial_number, 'gray')
-#             b = get_job_label(job_serial_number, job_groups, 26)
-#             b = 'F' + b[1:]  # 第26台机器是F开头
-#
-#             # 绘制甘特条，保持与主图相同的样式
-#             plt.barh(0, width=end - start, height=common_params['bar_height'],
-#                      left=start, color=color, edgecolor='black')
-#             plt.text(x=start + (end - start) / 2, y=0,
-#                      s=b, va='center', ha='center', fontsize=common_params['fontsize'])
-#
-#             mi.append(b)
-#
-#         print("Line4机器上工件的加工顺序：", mi)
-#
-#         # 设置Y轴
-#         plt.yticks([0], ['M26'], fontsize=common_params['fontsize'])
-#
-#         # 设置与主图相同的时间轴范围
-#         plt.xlim([all_start - common_params['time_range_padding'],
-#                   all_end + common_params['time_range_padding']])
-#
-#         # 添加组标签
-#         plt.text(common_params['group_label_offset'], 0, 'Line4',
-#                  fontsize=common_params['fontsize'], rotation=90, va='center', ha='right')
-#
-#         # 在横轴上标出tn数组中的各个时刻，并画垂直虚线
-#         for t in tn:
-#             t_rounded = round(t, 2)
-#             plt.axvline(x=t_rounded, color='gray', linestyle='--', linewidth=0.8)
-#             plt.text(x=t_rounded + 0.2, y=common_params['time_marker_offset'],
-#                      s=f'{t_rounded:.2f}', ha='center', va='top',
-#                      fontsize=common_params['fontsize'])
-#
-#         plt.ylabel('Line', labelpad=20, fontsize=common_params['fontsize'])
-#         plt.xlabel('makespan (minute)', fontsize=common_params['fontsize'])
-#         plt.tight_layout()
-#         plt.savefig('优化后排程方案的甘特图_Line4.png', bbox_inches='tight')
-#         plt.show()
-#
-#
-# def get_job_label(job_serial_number, job_groups, machine_id):
-#     """统一获取工件标签的函数"""
-#     if job_serial_number in job_groups['Reds']:
-#         b = f"P{job_serial_number}A"
-#     elif job_serial_number in job_groups['Blues']:
-#         b = f"P{job_serial_number}B"
-#     elif job_serial_number in job_groups['Greens']:
-#         b = f"P{job_serial_number}C"
-#     elif job_serial_number in job_groups['Oranges']:
-#         b = f"P{job_serial_number}D"
-#     elif job_serial_number in job_groups['Purples']:
-#         b = f"P{job_serial_number}E"
-#     elif job_serial_number in job_groups['YlOrBr']:
-#         b = f"P{job_serial_number}F"
-#     elif job_serial_number in job_groups['PuBu']:
-#         b = f"P{job_serial_number}G"
-#     elif job_serial_number in job_groups['Greys']:
-#         b = f"P{job_serial_number}MTZ1"
-#     elif job_serial_number in job_groups['BuGn']:
-#         b = f"P{job_serial_number}MTZ2"
-#     elif job_serial_number in job_groups['RdPu']:
-#         b = f"P{job_serial_number}MTZ3"
-#
-#     if machine_id in (14, 21, 25, 26):
-#         b = 'F' + b[1:]
-#
-#     return b
 
 def run_single_experiment(run_num):
     start_time = time.time()  # 记录开始时间
@@ -524,7 +162,7 @@ def run_single_experiment(run_num):
 
     e = Encode(Processing_time, J, J_num, M_num)
     e.Get_Map_base_value()
-    s = SO(e.Len_Chromo, k)
+    s = SO(e.Len_Chromo)
     X = s.SO_initial()
 
     Best_fit = []  # 记录适应度在迭代过程中的变化，便于绘图
@@ -540,7 +178,7 @@ def run_single_experiment(run_num):
     # 得到食物的位置，其实就是当前全局最佳适应度的位置 食物也是全局最优个体
     food = X[g_best, :]   # 种群初始化时的最优个体
     food_mapped_individual = e.Individual_Coding_mapping_conversion(food)
-    d = Decode(J, Processing_time, M_num, k)
+    d = Decode(J, Processing_time, M_num)
     y, Matching_result_all, tn = d.decode(food_mapped_individual, O_num)
     print("种群初始时food的适应度：",y)
     # Gantt(d.Machines,k)   # 种群初始化时的最优个体 解码后 对应的甘特图
@@ -621,9 +259,9 @@ def run_single_experiment(run_num):
             Optimal_fit = gy_best
             #food 就是最优个体
             food_mapped_individual1 = e.Individual_Coding_mapping_conversion(food)
-            d = Decode(J, Processing_time, M_num, k)
+            d = Decode(J, Processing_time, M_num)
             y, Matching_result_all, tn = d.decode(food_mapped_individual1, O_num)
-            ans = Gantt(d.Machines, k, tn)  # 种群初始化时的最优个体 解码后 对应的甘特图
+            ans = Gantt(d.Machines, tn)  # 种群初始化时的最优个体 解码后 对应的甘特图
             print("每台机器上工件的加工顺序：", ans)
             print("总配套关系为：",Matching_result_all)
             print("配套时刻为：",tn)
@@ -633,9 +271,9 @@ def run_single_experiment(run_num):
 
     # 最后一次迭代，把配套关系与配套时刻打印出来
     food_mapped_individual1 = e.Individual_Coding_mapping_conversion(food)
-    d = Decode(J, Processing_time, M_num, k)
+    d = Decode(J, Processing_time, M_num)
     y, Matching_result_all, tn = d.decode(food_mapped_individual1, O_num)
-    ans = Gantt(d.Machines, k, tn)  # 种群初始化时的最优个体 解码后 对应的甘特图
+    ans = Gantt(d.Machines, tn)  # 种群初始化时的最优个体 解码后 对应的甘特图
     print("每台机器上工件的加工顺序：",ans)
     print("总配套关系为：", Matching_result_all)
     print("配套时刻为：", tn)

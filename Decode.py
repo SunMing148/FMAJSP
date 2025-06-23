@@ -2,16 +2,15 @@ import copy
 import numpy as np
 from Job import Job
 from Machine import Machine_Time_window
+from Instance import kn, Job_serial_number
 
 class Decode:
-    def __init__(self, J, Processing_time, M_num, k):
+    def __init__(self, J, Processing_time, M_num):
         """
         :param J: 各工件对应的工序数字典
         :param Processing_time: 各工件的加工时间矩阵
         :param M_num: 加工机器数
         """
-        self.k = k     # instance中的k
-        self.n = 3*k   # 总成品数
         self.Processing_time = Processing_time   # 就是Instance里的Processing_time
         self.M_num = M_num
         self.J = J
@@ -25,87 +24,21 @@ class Decode:
         for k, v in J.items():
             self.Jobs.append(Job(k, v))          # 为每一个工件都创建了一个Job对象
 
-        self.Ap=[5,15,25,9,19,29]  # 机器21装配工序 （第一次装配工序） 对应的Job编号（编号减1）
-        temp_Ap = copy.deepcopy(self.Ap)
-        for i in range(1, self.k):  # 从1到k-1，逐次添加新元素
-            new_values = [x + 30 * i for x in temp_Ap]  # 计算新的元素值
-            self.Ap.extend(new_values)  # 将新元素添加到数组中
-
-        self.D = [6, 16]
-        temp_D = copy.deepcopy(self.D)
-        for i in range(1, self.k):  # 从1到k-1，逐次添加新元素
-            new_values = [x + 30 * i for x in temp_D]  # 计算新的元素值
-            self.D.extend(new_values)  # 将新元素添加到数组中
-
-        self.E = [26]
-        temp_E = copy.deepcopy(self.E)
-        for i in range(1, self.k):  # 从1到k-1，逐次添加新元素
-            new_values = [x + 30 * i for x in temp_E]  # 计算新的元素值
-            self.E.extend(new_values)  # 将新元素添加到数组中
-
-        self.D_component1 = [4, 14]
-        temp_D_component1 = copy.deepcopy(self.D_component1)
-        for i in range(1, self.k):  # 从1到k-1，逐次添加新元素
-            new_values = [x + 30 * i for x in temp_D_component1]  # 计算新的元素值
-            self.D_component1.extend(new_values)  # 将新元素添加到数组中
-
-        self.D_component2 = [5, 15]
-        temp_D_component2 = copy.deepcopy(self.D_component2)
-        for i in range(1, self.k):  # 从1到k-1，逐次添加新元素
-            new_values = [x + 30 * i for x in temp_D_component2]  # 计算新的元素值
-            self.D_component2.extend(new_values)  # 将新元素添加到数组中
-
-        self.E_component1 = [24]
-        temp_E_component1 = copy.deepcopy(self.E_component1)
-        for i in range(1, self.k):  # 从1到k-1，逐次添加新元素
-            new_values = [x + 30 * i for x in temp_E_component1]  # 计算新的元素值
-            self.E_component1.extend(new_values)  # 将新元素添加到数组中
-
-        self.E_component2 = [25]
-        temp_E_component2 = copy.deepcopy(self.E_component2)
-        for i in range(1, self.k):  # 从1到k-1，逐次添加新元素
-            new_values = [x + 30 * i for x in temp_E_component2]  # 计算新的元素值
-            self.E_component2.extend(new_values)  # 将新元素添加到数组中
-
-        self.A = [1, 2, 3]
-        for i in range(1, self.k):  # 从1到k-1，逐次添加新元素
-            new_values = [x + 30 * i for x in copy.deepcopy(self.A)]  # 计算新的元素值
-            self.A.extend(new_values)  # 将新元素添加到数组中
-
-        self.B = [11, 12, 13]
-        for i in range(1, self.k):  # 从1到k-1，逐次添加新元素
-            new_values = [x + 30 * i for x in copy.deepcopy(self.B)]  # 计算新的元素值
-            self.B.extend(new_values)  # 将新元素添加到数组中
-
-        self.C = [21, 22, 23]
-        for i in range(1, self.k):  # 从1到k-1，逐次添加新元素
-            new_values = [x + 30 * i for x in copy.deepcopy(self.C)]  # 计算新的元素值
-            self.C.extend(new_values)  # 将新元素添加到数组中
-
-        self.F = [7, 8, 9]
-        for i in range(1, self.k):  # 从1到k-1，逐次添加新元素
-            new_values = [x + 30 * i for x in copy.deepcopy(self.F)]  # 计算新的元素值
-            self.F.extend(new_values)  # 将新元素添加到数组中
-
-        self.G = [17, 18, 19, 27, 28, 29]
-        for i in range(1, self.k):  # 从1到k-1，逐次添加新元素
-            new_values = [x + 30 * i for x in copy.deepcopy(self.G)]  # 计算新的元素值
-            self.G.extend(new_values)  # 将新元素添加到数组中
-
-        self.M1 = [10]
-        for i in range(1, self.k):  # 从1到k-1，逐次添加新元素
-            new_values = [x + 30 * i for x in copy.deepcopy(self.M1)]  # 计算新的元素值
-            self.M1.extend(new_values)  # 将新元素添加到数组中
-
-        self.M2 = [20]
-        for i in range(1, self.k):  # 从1到k-1，逐次添加新元素
-            new_values = [x + 30 * i for x in copy.deepcopy(self.M2)]  # 计算新的元素值
-            self.M2.extend(new_values)  # 将新元素添加到数组中
-
-        self.M3 = [30]
-        for i in range(1, self.k):  # 从1到k-1，逐次添加新元素
-            new_values = [x + 30 * i for x in copy.deepcopy(self.M3)]  # 计算新的元素值
-            self.M3.extend(new_values)  # 将新元素添加到数组中
+        self.Ap = Job_serial_number["Ap"]
+        self.A = Job_serial_number["A"]
+        self.B = Job_serial_number["B"]
+        self.C = Job_serial_number["C"]
+        self.D = Job_serial_number["D"]
+        self.D_component1 = Job_serial_number["D_component1"]
+        self.D_component2 = Job_serial_number["D_component2"]
+        self.E = Job_serial_number["E"]
+        self.E_component1 = Job_serial_number["E_component1"]
+        self.E_component2 = Job_serial_number["E_component2"]
+        self.F = Job_serial_number["F"]
+        self.G = Job_serial_number["G"]
+        self.M1 = Job_serial_number["M1"]
+        self.M2 = Job_serial_number["M2"]
+        self.M3 = Job_serial_number["M3"]
 
     def find_earliest_completion(self,machine_data, component_list):
         """
@@ -192,7 +125,6 @@ class Decode:
             'M1': self.M1,
             'M2': self.M2,
             'M3': self.M3,
-
         }
         component_type = {}
         for type_name, nums in groups.items():
@@ -228,7 +160,7 @@ class Decode:
         tn = []
         Matching_result_all = []  # 总装配套结果
 
-        for step in range(1, self.n + 1):
+        for step in range(1, kn + 1):
             candidates = []
             # 检查每个成品是否可生产
             for product in ['MTZ1', 'MTZ2', 'MTZ3']:
