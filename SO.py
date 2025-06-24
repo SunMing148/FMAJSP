@@ -2,27 +2,33 @@ import math
 import random
 import numpy as np
 from Decode import Decode
-from Instance import Processing_time, J, M_num
 
 # SO 未改进 标准SO
 class SO():
-    def __init__(self, Len_Chromo):
-        self.Pop_size = 100  # 种群数量
+    def __init__(self, Len_Chromo, Processing_time, J, M_num, kn, Job_serial_number, Special_Machine_ID):
+        self.Pop_size = 50  # 种群数量
 
-        self.C1 = 0.5     #
-        self.C2 = 0.05  # 之前是0.5，改成0.05好像更好了，也不一定
-        self.C3 = 2  #
+        self.C1 = 0.5 #
+        self.C2 = 0.05 # 之前是0.5，改成0.05好像更好了，也不一定
+        self.C3 = 2 #
 
-        self.food_threshold = 0.28        # 有没有食物的阈值
-        self.temp_threshold = 0.6         # 温度适不适合交配的阈值
-        self.model_threshold = 0.62        # 模式阈值,当产生的随机值小于模式阈值就进入战斗模式，否则就进入交配模式
+        self.food_threshold = 0.28 # 有没有食物的阈值
+        self.temp_threshold = 0.6 # 温度适不适合交配的阈值
+        self.model_threshold = 0.62 # 模式阈值,当产生的随机值小于模式阈值就进入战斗模式，否则就进入交配模式
 
-        self.Max_Itertions = 125  # 最大迭代次数
+        self.Max_Itertions = 125 # 最大迭代次数
         self.Len_Chromo = Len_Chromo
 
         self.vec_flag = [1, -1]
         self.ub = 1
         self.lb = 0
+
+        self.Processing_time = Processing_time
+        self.J = J
+        self.M_num = M_num
+        self.kn = kn
+        self.Job_serial_number = Job_serial_number
+        self.Special_Machine_ID = Special_Machine_ID
 
     # def pwlc_map(self, N, dim, p=0.5, epsilon=1e-10):
     #     """
@@ -51,29 +57,31 @@ class SO():
     #
     #     return Piecewise
 
+
     def SO_initial(self):
         # 随机生成
-        X = self.lb + np.random.random_sample((self.Pop_size, self.Len_Chromo*2)) * (self.ub - self.lb)
+        X = self.lb + np.random.random_sample((self.Pop_size, self.Len_Chromo * 2)) * (self.ub - self.lb)
         # # 分段线性混沌映射(PWLCM)生成
         # X = self.pwlc_map(self.Pop_size, self.Len_Chromo*2)
         return X
 
     # 适应度
-    def fitness(self, e, CHS, J, Processing_time, M_num, Len):
+    def fitness(self, e, CHS, Len):
         # 种群映射转换
         CHS = e.Coding_mapping_conversion(CHS)
         Fit = []
         for i in range(len(CHS)):
-            d = Decode(J, Processing_time, M_num)
+            d = Decode(self.J, self.Processing_time, self.M_num, self.kn, self.Job_serial_number, self.Special_Machine_ID)
             y, Matching_result_all, tn = d.decode(CHS[i], Len)
             Fit.append(y)
         return Fit
 
     # 标准蛇优化算法的ExplorationPhaseNoFood
-    def ExplorationPhaseNoFood(self, male_number, male, male_individual_fitness, new_male, female_number, female, female_individual_fitness, new_female):
+    def ExplorationPhaseNoFood(self, male_number, male, male_individual_fitness, new_male, female_number, female,
+                               female_individual_fitness, new_female):
         # 先是雄性
         for i in range(male_number):
-            for j in range(self.Len_Chromo*2):
+            for j in range(self.Len_Chromo * 2):
                 # 先取得一个随机的个体
                 rand_leader_index = np.random.randint(0, male_number)
                 rand_male = male[rand_leader_index, :]
@@ -86,7 +94,7 @@ class SO():
                 new_male[i, j] = rand_male[j] + flag * self.C2 * am * (
                         (self.ub - self.lb) * random.random() + self.lb)
         for i in range(female_number):
-            for j in range(self.Len_Chromo*2):
+            for j in range(self.Len_Chromo * 2):
                 # 先取得一个随机的个体
                 rand_leader_index = np.random.randint(0, female_number)
                 rand_female = female[rand_leader_index, :]
@@ -133,28 +141,28 @@ class SO():
             # 随机生成+或者是-,来判断当前的c2是取正还是负
             negative_or_positive = np.random.randint(0, 2)
             flag = self.vec_flag[negative_or_positive]
-            for j in range(self.Len_Chromo*2):
+            for j in range(self.Len_Chromo * 2):
                 new_male[i, j] = food[j] + flag * self.C3 * temp * random.random() * (food[j] - male[i, j])
         # 更新雌性的位置
         for i in range(female_number):
             # 随机生成+或者是-,来判断当前的c2是取正还是负
             negative_or_positive = np.random.randint(0, 2)
             flag = self.vec_flag[negative_or_positive]
-            for j in range(self.Len_Chromo*2):
+            for j in range(self.Len_Chromo * 2):
                 new_female[i, j] = food[j] + flag * self.C3 * temp * random.random() * (food[j] - female[i, j])
         return new_male, new_female
 
     def fight(self, quantity, male, male_number, male_individual_fitness, male_fitness_best_value, male_best_fitness_individual, new_male, female, female_number, female_individual_fitness, female_fitness_best_value, female_best_fitness_individual, new_female):
         # 更新雄性的位置
         for i in range(male_number):
-            for j in range(self.Len_Chromo*2):
+            for j in range(self.Len_Chromo * 2):
                 # 先计算当前雄性的战斗的能力
                 fm = math.exp(-female_fitness_best_value / (male_individual_fitness[i] + np.spacing(1)))
                 new_male[i, j] = male[i, j] + self.C3 * fm * random.random() * (
                         quantity * male_best_fitness_individual[j] - male[i, j])
         # 更新雌性的位置
         for i in range(female_number):
-            for j in range(self.Len_Chromo*2):
+            for j in range(self.Len_Chromo * 2):
                 # 先计算当前雌性的战斗的能力
                 ff = math.exp(-male_fitness_best_value / (female_individual_fitness[i] + np.spacing(1)))
                 new_female[i, j] = female[i, j] + self.C3 * ff * random.random() * (
@@ -164,14 +172,14 @@ class SO():
     def mating(self, quantity, male, male_number, male_individual_fitness, new_male, female, female_number, female_individual_fitness, new_female):
         # 雄性先交配
         for i in range(male_number):
-            for j in range(self.Len_Chromo*2):
+            for j in range(self.Len_Chromo * 2):
                 # 计算当前雄性的交配的能力
                 mm = math.exp(-female_individual_fitness[i] / (male_individual_fitness[i] + np.spacing(1)))
                 new_male[i, j] = male[i, j] + self.C3 * random.random() * mm * (
                         quantity * female[i, j] - male[i, j])
         # 雌性先交配
         for i in range(female_number):
-            for j in range(self.Len_Chromo*2):
+            for j in range(self.Len_Chromo * 2):
                 # 计算当前雄性的交配的能力
                 mf = math.exp(-male_individual_fitness[i] / (female_individual_fitness[i] + np.spacing(1)))
                 new_female[i, j] = female[i, j] + self.C3 * random.random() * mf * (
@@ -204,7 +212,7 @@ class SO():
             # 计算雄性种群中每一个个体的适应度（这个是被更新过位置的）
             individual = np.array(new_male[j, :])[0]
             mapped_individual = e.Individual_Coding_mapping_conversion(individual)
-            d = Decode(J, Processing_time, M_num)
+            d = Decode(self.J, self.Processing_time, self.M_num, self.kn, self.Job_serial_number, self.Special_Machine_ID)
             y, Matching_result_all,tn = d.decode(mapped_individual, Len)
 
 
@@ -245,7 +253,7 @@ class SO():
             # 计算雄性种群中每一个个体的适应度（这个是被更新过位置的）
             individual = np.array(new_female[j, :])[0]
             mapped_individual = e.Individual_Coding_mapping_conversion(individual)
-            d = Decode(J, Processing_time, M_num)
+            d = Decode(self.J, self.Processing_time, self.M_num, self.kn, self.Job_serial_number, self.Special_Machine_ID)
             y, Matching_result_all, tn = d.decode(mapped_individual, Len)
 
             # # LOBL strategy

@@ -5,27 +5,28 @@ import matplotlib.pyplot as plt
 import numpy as np
 from Decode import Decode
 from Encode import Encode
-from ISO import SO    # 导入此是改进的ISO
+from SO import SO   # 导入此是未改进的标准SO
+
 
 def generate_color_map():
     # 定义色系与对应的工件ID
     job_groups = {
-        'Reds': Job_serial_number["A"],                        # A
-        'Blues': Job_serial_number["B"],                       # B
-        'Greens': Job_serial_number["C"],                      # C
-        'Oranges': Job_serial_number["D"] + Job_serial_number["D_component1"] + Job_serial_number["D_component2"],         # D
-        'Purples': Job_serial_number["E"] + Job_serial_number["E_component1"] + Job_serial_number["E_component2"],         # E
-        'YlOrBr': Job_serial_number["F"],                      # F
-        'PuBu': Job_serial_number["G"],                        # G
-        'Greys': Job_serial_number["M1"],                      # M1
-        'BuGn': Job_serial_number["M2"],                       # M2
-        'RdPu': Job_serial_number["M3"]                        # M3
+        'Reds': Job_serial_number["A"],  # A
+        'Blues': Job_serial_number["B"],  # B
+        'Greens': Job_serial_number["C"],  # C
+        'Oranges': Job_serial_number["D"] + Job_serial_number["D_component1"] + Job_serial_number["D_component2"],  # D
+        'Purples': Job_serial_number["E"] + Job_serial_number["E_component1"] + Job_serial_number["E_component2"],  # E
+        'YlOrBr': Job_serial_number["F"],  # F
+        'PuBu': Job_serial_number["G"],  # G
+        'Greys': Job_serial_number["M1"],  # M1
+        'BuGn': Job_serial_number["M2"],  # M2
+        'RdPu': Job_serial_number["M3"]  # M3
     }
 
     # 创建颜色映射表
     color_map = {}
 
-        # 遍历每个色系及其对应的工件ID
+    # 遍历每个色系及其对应的工件ID
     for colormap_name, jobs in job_groups.items():
         # 获取对应组的颜色映射
         cmap = plt.get_cmap(colormap_name)
@@ -39,22 +40,23 @@ def generate_color_map():
 
     return color_map, job_groups
 
-#v3
-def Gantt(Machines,tn):
+
+# v3
+def Gantt(Machines, tn):
     color_map, job_groups = generate_color_map()
 
     # 设置画布大小
     plt.figure(figsize=(20, 10), dpi=300)
     # plt.figure(figsize=(10, 6), dpi=300)
 
-    group_spacing = 2 # 组之间的间距
+    group_spacing = 2  # 组之间的间距
     # machine_offset = {1: 0, 15: group_spacing, 18: 0.3, 21: 0.3, 22: group_spacing, 26: group_spacing}
-    machine_offset = {1 : 0,
-      Special_Machine_ID["L1_last_machine_ID"]+2 : group_spacing,
-      Special_Machine_ID["L2_pre_assembly_machine_ID_low"]+2 : 0.3,
-      Special_Machine_ID["L2_last_machine_ID"]+1 : 0.3,
-      Special_Machine_ID["L2_last_machine_ID"]+2 : group_spacing,
-      Special_Machine_ID["L4_last_machine_ID"]+1 : group_spacing}
+    machine_offset = {1: 0,
+                      Special_Machine_ID["L1_last_machine_ID"] + 2: group_spacing,
+                      Special_Machine_ID["L2_pre_assembly_machine_ID_low"] + 2: 0.3,
+                      Special_Machine_ID["L2_last_machine_ID"] + 1: 0.3,
+                      Special_Machine_ID["L2_last_machine_ID"] + 2: group_spacing,
+                      Special_Machine_ID["L4_last_machine_ID"] + 1: group_spacing}
 
     ans = []
 
@@ -66,7 +68,7 @@ def Gantt(Machines,tn):
         machine_id = machine_index + 1
         adjusted_index = machine_index + sum([offset for key, offset in machine_offset.items() if machine_id >= key])
 
-        mi=[]
+        mi = []
         mi.append(machine_id)
 
         for task_index, (start, end) in enumerate(zip(start_times, end_times)):
@@ -96,7 +98,9 @@ def Gantt(Machines,tn):
                 b = f"P{job_serial_number}MTZ3"
 
             # if machine_id in (14,21,25,26): # 遍历每条产线的最后一台机器
-            if machine_id in (Special_Machine_ID["L1_last_machine_ID"],Special_Machine_ID["L2_last_machine_ID"],Special_Machine_ID["L3_last_machine_ID"],Special_Machine_ID["L4_last_machine_ID"]):      # 遍历每条产线的最后一台机器
+            if machine_id in (Special_Machine_ID["L1_last_machine_ID"], Special_Machine_ID["L2_last_machine_ID"],
+                              Special_Machine_ID["L3_last_machine_ID"],
+                              Special_Machine_ID["L4_last_machine_ID"]):  # 遍历每条产线的最后一台机器
                 b = 'F' + b[1:]
 
             # 绘制甘特条
@@ -112,7 +116,6 @@ def Gantt(Machines,tn):
             mi.append(b)
 
         ans.append(mi)
-
 
     # 设置Y轴刻度标签
     yticks = []
@@ -132,22 +135,25 @@ def Gantt(Machines,tn):
     # 'Line4': (26 + 26) / 2 + 1 + group_spacing + 2.8 # 第三组中间位置，考虑偏移
     # }
     group_labels = {
-        'Line1': (0 + Special_Machine_ID["L1_last_machine_ID"]+1) / 2 - 0.5,  # 第一组中间位置
-        'Line2': (Special_Machine_ID["L1_last_machine_ID"]+2 + Special_Machine_ID["L2_last_machine_ID"]+1) / 2 - 1 + group_spacing + 0.4,  # 第二组中间位置，考虑偏移
-        'Line3': (Special_Machine_ID["L2_last_machine_ID"]+2 + Special_Machine_ID["L3_last_machine_ID"]+1) / 2 + 1 + group_spacing + 0.8,  # 第三组中间位置，考虑偏移
-        'Line4': (Special_Machine_ID["L4_last_machine_ID"]+1 + Special_Machine_ID["L4_last_machine_ID"]+1) / 2 + 1 + group_spacing + 2.8 # 第三组中间位置，考虑偏移
+        'Line1': (0 + Special_Machine_ID["L1_last_machine_ID"] + 1) / 2 - 0.5,  # 第一组中间位置
+        'Line2': (Special_Machine_ID["L1_last_machine_ID"] + 2 + Special_Machine_ID[
+            "L2_last_machine_ID"] + 1) / 2 - 1 + group_spacing + 0.4,  # 第二组中间位置，考虑偏移
+        'Line3': (Special_Machine_ID["L2_last_machine_ID"] + 2 + Special_Machine_ID[
+            "L3_last_machine_ID"] + 1) / 2 + 1 + group_spacing + 0.8,  # 第三组中间位置，考虑偏移
+        'Line4': (Special_Machine_ID["L4_last_machine_ID"] + 1 + Special_Machine_ID[
+            "L4_last_machine_ID"] + 1) / 2 + 1 + group_spacing + 2.8  # 第三组中间位置，考虑偏移
     }
 
     # 绘制组标签
     for label, position in group_labels.items():
         # plt.text(-0.3, position, label, fontsize=8, rotation=90, va='center', ha='right') # 适用成品少
-        plt.text(-1.5, position, label, fontsize=12, rotation=90, va='center', ha='right')    # 适用成品多
+        plt.text(-1.5, position, label, fontsize=12, rotation=90, va='center', ha='right')  # 适用成品多
 
     # 在横轴上标出tn数组中的各个时刻，并画垂直虚线
     for t in tn:
         t_rounded = round(t, 2)  # 保留两位小数
         plt.axvline(x=t_rounded, color='gray', linestyle='--', linewidth=0.8)
-        plt.text(x=t_rounded+0.2, y=-1.2, s=f'{t_rounded:.2f}', ha='center', va='top', fontsize=12)  # 标记在下方
+        plt.text(x=t_rounded + 0.2, y=-1.2, s=f'{t_rounded:.2f}', ha='center', va='top', fontsize=12)  # 标记在下方
     # 调整横轴范围，避免遮挡
     # plt.ylim(-1.5, plt.ylim()[1]) # 为下方标记留出空间
 
@@ -166,8 +172,8 @@ def Gantt(Machines,tn):
 def run_single_experiment(run_num):
     start_time = time.time()  # 记录开始时间
 
-    Optimal_fit = 9999 # 最佳适应度（初始化）
-    Optimal_CHS = None # 最佳适应度对应的基因个体（初始化）
+    Optimal_fit = 9999  # 最佳适应度（初始化）
+    Optimal_CHS = None  # 最佳适应度对应的基因个体（初始化）
 
     e = Encode(Processing_time, J, J_num, M_num)
     e.Get_Map_base_value()
@@ -181,15 +187,15 @@ def run_single_experiment(run_num):
     # 计算出全局最佳适应度, 因为这个是第一次进行操作，不用和别的进行对比
     g_best = np.argmin(Fit)
     gy_best = Fit[g_best]
-    Optimal_fit = gy_best # Optimal_fit存放比上代更优的适应度
-    Best_fit.append(round(gy_best,3))
+    Optimal_fit = gy_best  # Optimal_fit存放比上代更优的适应度
+    Best_fit.append(round(gy_best, 3))
 
     # 得到食物的位置，其实就是当前全局最佳适应度的位置 食物也是全局最优个体
-    food = X[g_best, :]   # 种群初始化时的最优个体
+    food = X[g_best, :]  # 种群初始化时的最优个体
     food_mapped_individual = e.Individual_Coding_mapping_conversion(food)
     d = Decode(J, Processing_time, M_num, kn, Job_serial_number, Special_Machine_ID)
     y, Matching_result_all, tn = d.decode(food_mapped_individual, O_num)
-    print("种群初始时food的适应度：",y)
+    print("种群初始时food的适应度：", y)
     # Gantt(d.Machines) # 种群初始化时的最优个体 解码后 对应的甘特图
     print("总配套关系为：", Matching_result_all)
     print("配套时刻：", tn)
@@ -216,15 +222,15 @@ def run_single_experiment(run_num):
     female_best_fitness_individual = female[female_fitness_best_index, :]
 
     # 迭代
-    for t in range(1, s.Max_Itertions+1):
-        print('-'*30)
+    for t in range(1, s.Max_Itertions + 1):
+        print('-' * 30)
         print("iter_{}".format(t))
         # 计算温度
         temp = math.exp(-(t / s.Max_Itertions))
         # 计算食物的质量
-        # quantity = s.C1 * math.exp((t - s.Max_Itertions) / s.Max_Itertions)
+        quantity = s.C1 * math.exp((t - s.Max_Itertions) / s.Max_Itertions)
         # 正弦变化的自适应惯性权重 食物指数更新策略
-        quantity = math.sin(random.random() + math.pi * t / 4 / s.Max_Itertions) * s.C1 * math.exp((t - s.Max_Itertions) / s.Max_Itertions)
+        # quantity = math.sin(random.random() + math.pi * t / 4 / s.Max_Itertions) * s.C1 * math.exp((t - s.Max_Itertions) / s.Max_Itertions)
 
         # 更新位置之后的male
         new_male = np.matrix(np.zeros((male_number, e.Len_Chromo * 2)))
@@ -236,8 +242,8 @@ def run_single_experiment(run_num):
         # 先判断食物的质量是不是超过了阈值
         if quantity < s.food_threshold:
             # 如果当前是没有食物的就寻找食物
-            # new_male, new_female = s.ExplorationPhaseNoFood(male_number, male, male_individual_fitness, new_male, female_number, female, female_individual_fitness, new_female)
-            new_male, new_female = s.ExplorationPhaseNoFood(food, male_number, male, male_individual_fitness, new_male, female_number, female, female_individual_fitness, new_female) # WOA螺旋
+            new_male, new_female = s.ExplorationPhaseNoFood(male_number, male, male_individual_fitness, new_male, female_number, female, female_individual_fitness, new_female)
+            # new_male, new_female = s.ExplorationPhaseNoFood(food, male_number, male, male_individual_fitness, new_male, female_number, female, female_individual_fitness, new_female)  # WOA螺旋
 
         else:
             # 当前有食物开始进入探索阶段
@@ -245,35 +251,42 @@ def run_single_experiment(run_num):
             if temp > s.temp_threshold:  # 表示当前是热的
                 # 热了就不进行交配，开始向食物的位置进行移动
                 # 雄性先移动
-                new_male, new_female = s.ExplorationPhaseFoodExists(food, temp, male_number, male, new_male, female_number, female, new_female)
+                new_male, new_female = s.ExplorationPhaseFoodExists(food, temp, male_number, male, new_male,
+                                                                    female_number, female, new_female)
             else:
                 # 如果当前的温度是比较的冷的，就比较适合战斗和交配
                 # 生成一个随机值来决定是要战斗还是要交配
                 model = random.random()
                 if model < s.model_threshold:
                     # 当前进入战斗模式
-                    new_male, new_female = s.fight(quantity, male, male_number, male_individual_fitness, male_fitness_best_value,
-                              male_best_fitness_individual, new_male, female, female_number, female_individual_fitness,
-                              female_fitness_best_value, female_best_fitness_individual, new_female)
+                    new_male, new_female = s.fight(quantity, male, male_number, male_individual_fitness,
+                                                   male_fitness_best_value,
+                                                   male_best_fitness_individual, new_male, female, female_number,
+                                                   female_individual_fitness,
+                                                   female_fitness_best_value, female_best_fitness_individual,
+                                                   new_female)
                 else:
                     # 当前将进入交配模式
-                    new_male, new_female = s.mating(quantity, male, male_number, male_individual_fitness, new_male, female,
-                               female_number, female_individual_fitness, new_female)
+                    new_male, new_female = s.mating(quantity, male, male_number, male_individual_fitness, new_male,
+                                                    female,
+                                                    female_number, female_individual_fitness, new_female)
 
         # 将更新后的位置进行处理
-        male_best_fitness_individual, female_best_fitness_individual, food, gy_best, male, male_individual_fitness, male_fitness_best_value, female, female_individual_fitness, female_fitness_best_value = s.update(t, gy_best, O_num, e, food, male, male_number, male_individual_fitness, male_fitness_best_value, new_male, male_best_fitness_individual, female, female_number, female_individual_fitness, female_fitness_best_value, new_female, female_best_fitness_individual)
-
+        male_best_fitness_individual, female_best_fitness_individual, food, gy_best, male, male_individual_fitness, male_fitness_best_value, female, female_individual_fitness, female_fitness_best_value = s.update(
+            t, gy_best, O_num, e, food, male, male_number, male_individual_fitness, male_fitness_best_value, new_male,
+            male_best_fitness_individual, female, female_number, female_individual_fitness, female_fitness_best_value,
+            new_female, female_best_fitness_individual)
 
         if gy_best < Optimal_fit:
             Optimal_fit = gy_best
-            #food 就是最优个体
+            # food 就是最优个体
             food_mapped_individual1 = e.Individual_Coding_mapping_conversion(food)
             d = Decode(J, Processing_time, M_num, kn, Job_serial_number, Special_Machine_ID)
             y, Matching_result_all, tn = d.decode(food_mapped_individual1, O_num)
             ans = Gantt(d.Machines, tn)  # 种群初始化时的最优个体 解码后 对应的甘特图
             print("每台机器上工件的加工顺序：", ans)
-            print("总配套关系为：",Matching_result_all)
-            print("配套时刻为：",tn)
+            print("总配套关系为：", Matching_result_all)
+            print("配套时刻为：", tn)
 
         print("当前代最优适应度：", round(gy_best, 3))
         Best_fit.append(round(gy_best, 3))
@@ -283,18 +296,19 @@ def run_single_experiment(run_num):
     d = Decode(J, Processing_time, M_num, kn, Job_serial_number, Special_Machine_ID)
     y, Matching_result_all, tn = d.decode(food_mapped_individual1, O_num)
     ans = Gantt(d.Machines, tn)  # 种群初始化时的最优个体 解码后 对应的甘特图
-    print("每台机器上工件的加工顺序：",ans)
+    print("每台机器上工件的加工顺序：", ans)
     print("总配套关系为：", Matching_result_all)
     print("配套时刻为：", tn)
 
-    x = [_ for _ in range(s.Max_Itertions+1)]  # 横坐标 迭代数
+    x = [_ for _ in range(s.Max_Itertions + 1)]  # 横坐标 迭代数
     plt.plot(x, Best_fit, '-k')
     # plt.title('the fitness of each iteration')
     plt.ylabel('Fitness')
     plt.xlabel('Iteraions')
     plt.savefig('适应度收敛图.png')
     plt.show()
-    print("每代最好适应度Best_fit：", Best_fit)   # Best_fit有Max_Itertions+1个，第一个为初始种群最好适应度，第2至Max_Itertions+1才对应于第1次迭代值Max_Itertions次迭代值
+    print("每代最好适应度Best_fit：",
+          Best_fit)  # Best_fit有Max_Itertions+1个，第一个为初始种群最好适应度，第2至Max_Itertions+1才对应于第1次迭代值Max_Itertions次迭代值
 
     end_time = time.time()  # 记录结束时间
     runtime = end_time - start_time
@@ -310,11 +324,12 @@ def run_single_experiment(run_num):
         "Process_sequencing": ans
     }
 
+
 if __name__ == '__main__':
     results = []
 
     # 创建结果文件
-    with open('ISO111experiment_results.txt', 'w', encoding='utf-8') as f:
+    with open('SO111experiment_results.txt', 'w', encoding='utf-8') as f:
         f.write("实验记录 - 5次运行结果\n")
         f.write("=" * 50 + "\n\n")
 
@@ -323,14 +338,14 @@ if __name__ == '__main__':
         print(f"开始第 {i} 次运行")
         print(f"{'=' * 50}\n")
 
-        #TODO 改成动态导入不同规模Instance
+        # TODO 改成动态导入不同规模Instance
         from Instance import Job_serial_number, Processing_time, J, J_num, M_num, O_num, kn, Special_Machine_ID
 
         result = run_single_experiment(i)
         results.append(result)
 
         # 将每次结果写入文件
-        with open('ISO111experiment_results.txt', 'a', encoding='utf-8') as f:
+        with open('SO111experiment_results.txt', 'a', encoding='utf-8') as f:
             f.write(f"第 {i} 次运行结果:\n")
             f.write(f"最优适应度: \n{result['Optimal_fit']}\n")
             f.write(f"每代最好适应度Best_fit: \n{result['Best_fit']}\n")
@@ -341,7 +356,7 @@ if __name__ == '__main__':
             f.write("-" * 50 + "\n\n")
 
     # 汇总统计信息
-    with open('ISO111experiment_results.txt', 'a', encoding='utf-8') as f:
+    with open('SO111experiment_results.txt', 'a', encoding='utf-8') as f:
         f.write("\n\n汇总统计信息:\n")
         f.write("=" * 50 + "\n")
 
@@ -355,4 +370,4 @@ if __name__ == '__main__':
         f.write(f"最佳适应度: {min(optimal_fits):.3f}\n")
         f.write(f"最差适应度: {max(optimal_fits):.3f}\n")
 
-    print("\n所有实验已完成，结果已保存到 ISO111experiment_results.txt 文件中")
+    print("\n所有实验已完成，结果已保存到 SO111experiment_results.txt 文件中")

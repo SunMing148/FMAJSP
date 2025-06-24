@@ -2,27 +2,33 @@ import math
 import random
 import numpy as np
 from Decode import Decode
-from Instance import Processing_time, J, M_num
 
 # ISO 三种改进方式，加main中一种
 class SO():
-    def __init__(self, Len_Chromo):
+    def __init__(self, Len_Chromo, Processing_time, J, M_num, kn, Job_serial_number, Special_Machine_ID):
         self.Pop_size = 50  # 种群数量
 
-        self.C1 = 0.5     #
-        self.C2 = 0.05  # 之前是0.5，改成0.05好像更好了，也不一定
-        self.C3 = 2  #
+        self.C1 = 0.5     # self.C2 = 0.05 # 之前是0.5，改成0.05好像更好了，也不一定
+        self.C3 = 2 #
 
-        self.food_threshold = 0.28        # 有没有食物的阈值
-        self.temp_threshold = 0.6         # 温度适不适合交配的阈值
-        self.model_threshold = 0.62        # 模式阈值,当产生的随机值小于模式阈值就进入战斗模式，否则就进入交配模式
+        self.food_threshold = 0.28 # 有没有食物的阈值
+        self.temp_threshold = 0.6 # 温度适不适合交配的阈值
+        self.model_threshold = 0.62 # 模式阈值,当产生的随机值小于模式阈值就进入战斗模式，否则就进入交配模式
 
-        self.Max_Itertions = 125  # 最大迭代次数
+        self.Max_Itertions = 125 # 最大迭代次数
         self.Len_Chromo = Len_Chromo
 
         self.vec_flag = [1, -1]
         self.ub = 1
         self.lb = 0
+
+        self.Processing_time = Processing_time
+        self.J = J
+        self.M_num = M_num
+        self.kn = kn
+        self.Job_serial_number = Job_serial_number
+        self.Special_Machine_ID = Special_Machine_ID
+
 
     def pwlc_map(self, N, dim, p=0.5, epsilon=1e-10):
         """
@@ -59,12 +65,12 @@ class SO():
         return X
 
     # 适应度
-    def fitness(self, e, CHS, J, Processing_time, M_num, Len):
+    def fitness(self, e, CHS, Len):
         # 种群映射转换
         CHS = e.Coding_mapping_conversion(CHS)
         Fit = []
         for i in range(len(CHS)):
-            d = Decode(J, Processing_time, M_num)
+            d = Decode(self.J, self.Processing_time, self.M_num, self.kn, self.Job_serial_number, self.Special_Machine_ID)
             y, Matching_result_all, tn = d.decode(CHS[i], Len)
             Fit.append(y)
         return Fit
@@ -204,7 +210,7 @@ class SO():
             # 计算雄性种群中每一个个体的适应度（这个是被更新过位置的）
             individual = np.array(new_male[j, :])[0]
             mapped_individual = e.Individual_Coding_mapping_conversion(individual)
-            d = Decode(J, Processing_time, M_num)
+            d = Decode(self.J, self.Processing_time, self.M_num, self.kn, self.Job_serial_number, self.Special_Machine_ID)
             y, Matching_result_all, tn = d.decode(mapped_individual, Len)
 
             # LOBL strategy
@@ -215,7 +221,7 @@ class SO():
             flag_high = new_individual > self.ub
             new_individual = (np.multiply(new_individual, ~(flag_low + flag_high))) + np.multiply(self.ub-0.0000001,flag_high) + np.multiply(self.lb, flag_low)
             new_mapped_individual = e.Individual_Coding_mapping_conversion(new_individual)
-            d = Decode(J, Processing_time, M_num)
+            d = Decode(self.J, self.Processing_time, self.M_num, self.kn, self.Job_serial_number, self.Special_Machine_ID)
             y_new, Matching_result_all, tn = d.decode(new_mapped_individual, Len)
 
             if y_new < y:
@@ -243,7 +249,7 @@ class SO():
             # 计算雄性种群中每一个个体的适应度（这个是被更新过位置的）
             individual = np.array(new_female[j, :])[0]
             mapped_individual = e.Individual_Coding_mapping_conversion(individual)
-            d = Decode(J, Processing_time, M_num)
+            d = Decode(self.J, self.Processing_time, self.M_num, self.kn, self.Job_serial_number, self.Special_Machine_ID)
             y, Matching_result_all, tn = d.decode(mapped_individual, Len)
 
             # LOBL strategy
@@ -254,7 +260,7 @@ class SO():
             flag_high = new_individual > self.ub
             new_individual = (np.multiply(new_individual, ~(flag_low + flag_high))) + np.multiply(self.ub-0.0000001,flag_high) + np.multiply(self.lb, flag_low)
             new_mapped_individual = e.Individual_Coding_mapping_conversion(new_individual)
-            d = Decode(J, Processing_time, M_num)
+            d = Decode(self.J, self.Processing_time, self.M_num, self.kn, self.Job_serial_number, self.Special_Machine_ID)
             y_new, Matching_result_all, tn = d.decode(new_mapped_individual, Len)
 
             if y_new < y:

@@ -2,10 +2,9 @@ import copy
 import numpy as np
 from Job import Job
 from Machine import Machine_Time_window
-from Instance import kn, Job_serial_number
 
 class Decode:
-    def __init__(self, J, Processing_time, M_num):
+    def __init__(self, J, Processing_time, M_num, kn, Job_serial_number, Special_Machine_ID):
         """
         :param J: 各工件对应的工序数字典
         :param Processing_time: 各工件的加工时间矩阵
@@ -14,15 +13,18 @@ class Decode:
         self.Processing_time = Processing_time   # 就是Instance里的Processing_time
         self.M_num = M_num
         self.J = J
-        self.Machines = []  # 存储机器类 一维数组  数组长度等于M_num机器数量 数组元素为Machine_Time_window(j)的对象
+        self.Machines = []  # 存储机器类 一维数组 数组长度等于M_num机器数量 数组元素为Machine_Time_window(j)的对象
         self.Scheduled = []  # 已经排产过的工序
-        self.fitness = 0  # 适应度
+        self.fitness = 0 # 适应度
         self.Machine_State = np.zeros(M_num, dtype=int)  # 在机器上加工的工件是哪个 一维数组 数组元素全是0 数组长度等于M_num机器数量
         self.Jobs = []  # 存储工件类
         for j in range(M_num):
-            self.Machines.append(Machine_Time_window(j))  # 为每一台机器都创建了一个Machine_Time_window对象
+                    self.Machines.append(Machine_Time_window(j))  # 为每一台机器都创建了一个Machine_Time_window对象
         for k, v in J.items():
-            self.Jobs.append(Job(k, v))          # 为每一个工件都创建了一个Job对象
+                    self.Jobs.append(Job(k, v))          # 为每一个工件都创建了一个Job对象
+
+        self.kn = kn
+        self.Special_Machine_ID = Special_Machine_ID
 
         self.Ap = Job_serial_number["Ap"]
         self.A = Job_serial_number["A"]
@@ -50,9 +52,9 @@ class Decode:
         earliest_time = float('inf')
         component_id = None
         for item in machine_data:
-            if item[0] in component_list and item[1] < earliest_time:
-                earliest_time = item[1]
-                component_id = item[0]
+                if item[0] in component_list and item[1] < earliest_time:
+                    earliest_time = item[1]
+                    component_id = item[0]
         return earliest_time, component_id
 
     # 时间顺序矩阵和机器顺序矩阵，根据基因的MS部分转换
@@ -85,6 +87,8 @@ class Decode:
         return JM, T
 
     # 确定工序的最早加工时间
+
+
     def Earliest_Start(self, Job, O_num, Machine):
         P_t = self.Processing_time[Job][O_num][Machine]
         last_O_end = self.Jobs[Job].Last_Processing_end_time  # 上道工序结束时间
@@ -112,7 +116,7 @@ class Decode:
         return M_Ealiest, Selected_Machine, P_t, O_num, last_O_end, End_work_time
 
     # 总装配配套结果
-    def calculate_schedule(self, machine_14, machine_21, machine_25, Matching_result_21):
+    def calculate_schedule(self, Machine_processing_data_L1_last_machine_ID, Machine_processing_data_L2_last_machine_ID, Machine_processing_data_L3_last_machine_ID, Matching_result_L2_last_machine):
         # 构建组件编号到类型的映射
         groups = {
             'A': self.A,
@@ -134,9 +138,9 @@ class Decode:
         # 初始化各组件类型的加工队列
         component_queues = {t: [] for t in groups.keys()}
         machine_data = {
-            14: machine_14,
-            21: machine_21,
-            25: machine_25,
+            "L1_last_machine_ID": Machine_processing_data_L1_last_machine_ID,
+            "L2_last_machine_ID": Machine_processing_data_L2_last_machine_ID,
+            "L3_last_machine_ID": Machine_processing_data_L3_last_machine_ID,
         }
         for machine_id, data in machine_data.items():
             for entry in data:
@@ -160,7 +164,7 @@ class Decode:
         tn = []
         Matching_result_all = []  # 总装配套结果
 
-        for step in range(1, kn + 1):
+        for step in range(1, self.kn + 1):
             candidates = []
             # 检查每个成品是否可生产
             for product in ['MTZ1', 'MTZ2', 'MTZ3']:
@@ -187,7 +191,7 @@ class Decode:
                 candidates.append((max_time, product, components_info))
 
             if not candidates:
-                break  # 理论上不会发生
+                break # 理论上不会发生
 
             # 选择时间最早且优先级高的成品
             candidates.sort(key=lambda x: (x[0], ['MTZ1', 'MTZ2', 'MTZ3'].index(x[1])))
@@ -208,13 +212,13 @@ class Decode:
             for comp_type, count in product_requirements[selected_product].items():
                 component_queues[comp_type] = component_queues[comp_type][count:]
 
-            # 新增逻辑：将数组Matching_result_21填充到Matching_result_all
-            Matching_result_21_dict = {item[0]: item for item in Matching_result_21}
+            # 新增逻辑：将数组Matching_result_L2_last_machine填充到Matching_result_all
+            Matching_result_L2_last_machine_dict = {item[0]: item for item in Matching_result_L2_last_machine}
             for entry in Matching_result_all:
                 # 提取第三个元组的第一个组件ID（即D/E组件的编号）
                 key = entry[2][0]
                 # 用a中对应的元组替换原元组
-                entry[2] = Matching_result_21_dict[key]
+                entry[2] = Matching_result_L2_last_machine_dict[key]
 
         return tn, Matching_result_all
 
@@ -248,13 +252,13 @@ class Decode:
             # Para[3] ：O_num 现在加工的工序 当前工件的第几道工序
             self.Machines[Machine]._Input(Job, Para[0], Para[2], Para[3])  # 机器完成该工件该工序
 
-        a = copy.deepcopy(self.Machines[20 - 1].O_end)
-        b = copy.deepcopy(self.Machines[20 - 1].assigned_task)
-        c = copy.deepcopy(self.Machines[17 - 1].O_end)
-        d = copy.deepcopy(self.Machines[17 - 1].assigned_task)
+        a = copy.deepcopy(self.Machines[self.Special_Machine_ID["L2_pre_assembly_machine_ID_high"]].O_end)              # 机构产线最后装配工序的前置工序（编号较高的，对应“机构主轴装配”工序）的机器ID号
+        b = copy.deepcopy(self.Machines[self.Special_Machine_ID["L2_pre_assembly_machine_ID_high"]].assigned_task)      # 机构产线最后装配工序的前置工序（编号较高的，对应“机构主轴装配”工序）的机器ID号
+        c = copy.deepcopy(self.Machines[self.Special_Machine_ID["L2_pre_assembly_machine_ID_low"]].O_end)               # 机构产线最后装配工序的前置工序（编号较低的，对应“机构零件铆压”工序）的机器ID号
+        d = copy.deepcopy(self.Machines[self.Special_Machine_ID["L2_pre_assembly_machine_ID_low"]].assigned_task)       # 机构产线最后装配工序的前置工序（编号较低的，对应“机构零件铆压”工序）的机器ID号
 
-        Machine_processing_data_20 = [[pair[0], a_val] for pair, a_val in zip(b, a)]
-        Machine_processing_data_17 = [[pair[0], c_val] for pair, c_val in zip(d, c)]
+        Machine_processing_data_L2_pre_assembly_machine_ID_high = [[pair[0], a_val] for pair, a_val in zip(b, a)]       # 机构产线最后装配工序的前置工序（编号较高的，对应“机构主轴装配”工序）的机器加工数据
+        Machine_processing_data_L2_pre_assembly_machine_ID_low = [[pair[0], c_val] for pair, c_val in zip(d, c)]        # 机构产线最后装配工序的前置工序（编号较低的，对应“机构零件铆压”工序）的机器加工数据
 
         D = copy.deepcopy(self.D)
         E = copy.deepcopy(self.E)
@@ -263,7 +267,7 @@ class Decode:
         E_component1 = copy.deepcopy(self.E_component1)
         E_component2 = copy.deepcopy(self.E_component2)
 
-        Matching_result_21 = []   # 机器21装配工序 装配配套结果
+        Matching_result_L2_last_machine = []   # 机构产线最后一个工序（装配工序）的装配配套结果
 
         while D or E:
             finished_item = -1
@@ -272,13 +276,13 @@ class Decode:
             earliest_time = -1
 
             # 对于D类型成品
-            time_D_comp1, comp1_id_D = self.find_earliest_completion(Machine_processing_data_17, D_component1)
-            time_D_comp2, comp2_id_D = self.find_earliest_completion(Machine_processing_data_20, D_component2)
+            time_D_comp1, comp1_id_D = self.find_earliest_completion(Machine_processing_data_L2_pre_assembly_machine_ID_low, D_component1)
+            time_D_comp2, comp2_id_D = self.find_earliest_completion(Machine_processing_data_L2_pre_assembly_machine_ID_high, D_component2)
             earliest_time_D = max(time_D_comp1, time_D_comp2)
 
             # 对于E类型成品
-            time_E_comp1, comp1_id_E = self.find_earliest_completion(Machine_processing_data_17, E_component1)
-            time_E_comp2, comp2_id_E = self.find_earliest_completion(Machine_processing_data_20, E_component2)
+            time_E_comp1, comp1_id_E = self.find_earliest_completion(Machine_processing_data_L2_pre_assembly_machine_ID_low, E_component1)
+            time_E_comp2, comp2_id_E = self.find_earliest_completion(Machine_processing_data_L2_pre_assembly_machine_ID_high, E_component2)
             earliest_time_E = max(time_E_comp1, time_E_comp2)
 
             if (not D) or (E and earliest_time_E < earliest_time_D):
@@ -297,35 +301,37 @@ class Decode:
                     earliest_time = earliest_time_D
 
             # 使用列表推导式过滤已配套的工件
-            Matching_result_21.append((finished_item, comp1_id, comp2_id))
+            Matching_result_L2_last_machine.append((finished_item, comp1_id, comp2_id))
             current_job = finished_item - 1
-            Machine_processing_data_17 = [sublist for sublist in Machine_processing_data_17 if sublist[0] != comp1_id]
-            Machine_processing_data_20 = [sublist for sublist in Machine_processing_data_20 if sublist[0] != comp2_id]
-            O_num = self.Jobs[current_job].Current_Processed()  # 现在加工的工序 当前工件的第几道工序       0
-            Machine = JM[current_job][O_num]  # 用基因的OS部分的工件序号以及工序序号索引机器顺序矩阵的机器序号  20  21-1
+            Machine_processing_data_L2_pre_assembly_machine_ID_low = [sublist for sublist in Machine_processing_data_L2_pre_assembly_machine_ID_low if sublist[0] != comp1_id]
+            Machine_processing_data_L2_pre_assembly_machine_ID_high = [sublist for sublist in Machine_processing_data_L2_pre_assembly_machine_ID_high if sublist[0] != comp2_id]
+            O_num = self.Jobs[current_job].Current_Processed()  # 现在加工的工序 当前工件的第几道工序 0
+            Machine = JM[current_job][O_num]  # 用基因的OS部分的工件序号以及工序序号索引机器顺序矩阵的机器序号 20 21-1
             P_t = self.Processing_time[current_job][O_num][Machine]  # P_t对应具体工件的工序的具体机器加工时间
             Machine_end_time = self.Machines[Machine].End_time
             start = max(Machine_end_time, earliest_time)
             End_work_time = start + P_t
             self.Jobs[current_job]._Input(start, End_work_time, Machine)  # 工件完成该工序
             if End_work_time > self.fitness:
-                self.fitness = End_work_time
+                            self.fitness = End_work_time
             self.Machines[Machine]._Input(current_job, start, P_t, O_num)  # 机器完成该工件该工序
 
 
-        e = copy.deepcopy(self.Machines[25 - 1].O_end)
-        f = copy.deepcopy(self.Machines[25 - 1].assigned_task)
-        g = copy.deepcopy(self.Machines[21 - 1].O_end)
-        h = copy.deepcopy(self.Machines[21 - 1].assigned_task)
-        i = copy.deepcopy(self.Machines[14 - 1].O_end)
-        j = copy.deepcopy(self.Machines[14 - 1].assigned_task)
+        e = copy.deepcopy(self.Machines[self.Special_Machine_ID["L3_last_machine_ID"]].O_end)                   # 灭弧室产线最后一个工序的机器ID号
+        f = copy.deepcopy(self.Machines[self.Special_Machine_ID["L3_last_machine_ID"]].assigned_task)           # 灭弧室产线最后一个工序的机器ID号
+        g = copy.deepcopy(self.Machines[self.Special_Machine_ID["L2_last_machine_ID"]].O_end)                   # 机构产线最后一个工序（装配工序）的机器ID号
+        h = copy.deepcopy(self.Machines[self.Special_Machine_ID["L2_last_machine_ID"]].assigned_task)           # 机构产线最后一个工序（装配工序）的机器ID号
+        i = copy.deepcopy(self.Machines[self.Special_Machine_ID["L1_last_machine_ID"]].O_end)                   # 互感器产线最后一个工序的机器ID号
+        j = copy.deepcopy(self.Machines[self.Special_Machine_ID["L1_last_machine_ID"]].assigned_task)           # 互感器产线最后一个工序的机器ID号
 
-        Machine_processing_data_25 = [[pair[0], a_val] for pair, a_val in zip(f, e)]
-        Machine_processing_data_21 = [[pair[0], c_val] for pair, c_val in zip(h, g)]
-        Machine_processing_data_14 = [[pair[0], c_val] for pair, c_val in zip(j, i)]
+        Machine_processing_data_L3_last_machine_ID = [[pair[0], a_val] for pair, a_val in zip(f, e)]
+        Machine_processing_data_L2_last_machine_ID = [[pair[0], c_val] for pair, c_val in zip(h, g)]
+        Machine_processing_data_L1_last_machine_ID = [[pair[0], c_val] for pair, c_val in zip(j, i)]
 
-        tn, Matching_result_all = self.calculate_schedule(Machine_processing_data_14, Machine_processing_data_21,
-                                                         Machine_processing_data_25, Matching_result_21)
+        tn, Matching_result_all = self.calculate_schedule(Machine_processing_data_L1_last_machine_ID,
+                                                                  Machine_processing_data_L2_last_machine_ID,
+                                                                  Machine_processing_data_L3_last_machine_ID,
+                                                                  Matching_result_L2_last_machine)
 
 
         M1 = copy.deepcopy(self.M1)
@@ -336,9 +342,9 @@ class Decode:
             if item[0][1] == 'MTZ1':
                 current_job = M1.pop(0) - 1
             elif item[0][1] == 'MTZ2':
-                current_job = M2.pop(0) - 1
+                            current_job = M2.pop(0) - 1
             elif item[0][1] == 'MTZ3':
-                current_job = M3.pop(0) - 1
+                            current_job = M3.pop(0) - 1
             O_num = self.Jobs[current_job].Current_Processed()  # 现在加工的工序 当前工件的第几道工序
             Machine = JM[current_job][O_num]  # 用基因的OS部分的工件序号以及工序序号索引机器顺序矩阵的机器序号
             P_t = self.Processing_time[current_job][O_num][Machine]  # P_t对应具体工件的工序的具体机器加工时间
@@ -356,4 +362,3 @@ class Decode:
 
 
         return self.fitness, Matching_result_all, tn
-
