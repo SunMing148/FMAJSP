@@ -15,7 +15,7 @@ class SO():
         self.temp_threshold = 0.6 # 温度适不适合交配的阈值
         self.model_threshold = 0.62 # 模式阈值,当产生的随机值小于模式阈值就进入战斗模式，否则就进入交配模式
 
-        self.Max_Itertions = 125 # 最大迭代次数
+        self.Max_Itertions = 3 # 最大迭代次数
         self.Len_Chromo = Len_Chromo
 
         self.vec_flag = [1, -1]

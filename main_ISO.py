@@ -46,40 +46,18 @@ def generate_color_map(Job_serial_number: Dict[str, List[str]]) -> (Dict[str, An
 
     return color_map, job_groups
 
-
-def Gantt(Machines, tn, Job_serial_number, Special_Machine_ID) -> List[List[Any]]:
+def Gantt(Machines, tn, Job_serial_number, Special_Machine_ID) -> List[List[Any]]:     # 只输出结果实际并不画图
     """绘制甘特图，增加Job_serial_number和Special_Machine_ID参数"""
     color_map, job_groups = generate_color_map(Job_serial_number)
-
-    # 设置画布大小
-    plt.figure(figsize=(20, 10), dpi=300)
-
-    group_spacing = 2  # 组之间的间距
-    machine_offset = {
-        1: 0,
-        Special_Machine_ID["L1_last_machine_ID"] + 2: group_spacing,
-        Special_Machine_ID["L2_pre_assembly_machine_ID_low"] + 2: 0.3,
-        Special_Machine_ID["L2_last_machine_ID"] + 1: 0.3,
-        Special_Machine_ID["L2_last_machine_ID"] + 2: group_spacing,
-        Special_Machine_ID["L4_last_machine_ID"] + 1: group_spacing
-    }
-
     ans = []
-
     for machine_index, Machine in enumerate(Machines):
         start_times = Machine.O_start
         end_times = Machine.O_end
-
         # 计算当前机器的实际绘图位置
         machine_id = machine_index + 1
-        adjusted_index = machine_index + sum([offset for key, offset in machine_offset.items() if machine_id >= key])
-
         mi = [machine_id]
-
         for task_index, (start, end) in enumerate(zip(start_times, end_times)):
             job_serial_number_val = Machine.assigned_task[task_index][0]
-            color = color_map.get(job_serial_number_val, 'gray')
-
             # 根据工件组分配标签前缀
             if job_serial_number_val in job_groups['Reds']:
                 b = f"P{job_serial_number_val}A"
@@ -101,62 +79,126 @@ def Gantt(Machines, tn, Job_serial_number, Special_Machine_ID) -> List[List[Any]
                 b = f"P{job_serial_number_val}MTZ2"
             elif job_serial_number_val in job_groups['RdPu']:
                 b = f"P{job_serial_number_val}MTZ3"
-
             # 产线最后一台机器标记为F前缀
             if machine_id in (Special_Machine_ID["L1_last_machine_ID"],
                               Special_Machine_ID["L2_last_machine_ID"],
                               Special_Machine_ID["L3_last_machine_ID"],
                               Special_Machine_ID["L4_last_machine_ID"]):
                 b = 'F' + b[1:]
-
-            # 绘制甘特条
-            plt.barh(adjusted_index, width=end - start, height=0.8, left=start,
-                     color=color, edgecolor='black')
-            plt.text(x=start + (end - start) / 2, y=adjusted_index,
-                     s=b, va='center', ha='center')
-
             mi.append(b)
-
         ans.append(mi)
-
-    # 设置Y轴刻度标签
-    yticks = []
-    yticklabels = []
-    for i, machine in enumerate(Machines, start=1):
-        adjusted_index = i - 1 + sum([offset for key, offset in machine_offset.items() if i >= key])
-        yticks.append(adjusted_index)
-        yticklabels.append(f'M{i}')
-
-    plt.yticks(yticks, yticklabels)
-
-    # 添加组标签
-    group_labels = {
-        'Line1': (0 + Special_Machine_ID["L1_last_machine_ID"] + 1) / 2 - 0.5,
-        'Line2': (Special_Machine_ID["L1_last_machine_ID"] + 2 + Special_Machine_ID[
-            "L2_last_machine_ID"] + 1) / 2 - 1 + group_spacing + 0.4,
-        'Line3': (Special_Machine_ID["L2_last_machine_ID"] + 2 + Special_Machine_ID[
-            "L3_last_machine_ID"] + 1) / 2 + 1 + group_spacing + 0.8,
-        'Line4': (Special_Machine_ID["L4_last_machine_ID"] + 1 + Special_Machine_ID[
-            "L4_last_machine_ID"] + 1) / 2 + 1 + group_spacing + 2.8
-    }
-
-    # 绘制组标签
-    for label, position in group_labels.items():
-        plt.text(-1.5, position, label, fontsize=12, rotation=90, va='center', ha='right')
-
-    # 在横轴上标出tn数组中的各个时刻，并画垂直虚线
-    for t in tn:
-        t_rounded = round(t, 2)
-        plt.axvline(x=t_rounded, color='gray', linestyle='--', linewidth=0.8)
-        plt.text(x=t_rounded + 0.2, y=-1.2, s=f'{t_rounded:.2f}', ha='center', va='top', fontsize=12)
-
-    plt.ylabel('Line', labelpad=20, fontsize=12)
-    plt.xlabel('makespan (minute)', fontsize=12)
-    plt.tight_layout()
-    plt.savefig('优化后排程方案的甘特图.png', bbox_inches='tight')
-    plt.show()
-
     return ans
+
+# def Gantt(Machines, tn, Job_serial_number, Special_Machine_ID) -> List[List[Any]]:
+#     """绘制甘特图，增加Job_serial_number和Special_Machine_ID参数"""
+#     color_map, job_groups = generate_color_map(Job_serial_number)
+#
+#     # 设置画布大小
+#     plt.figure(figsize=(20, 10), dpi=300)
+#
+#     group_spacing = 2  # 组之间的间距
+#     machine_offset = {
+#         1: 0,
+#         Special_Machine_ID["L1_last_machine_ID"] + 2: group_spacing,
+#         Special_Machine_ID["L2_pre_assembly_machine_ID_low"] + 2: 0.3,
+#         Special_Machine_ID["L2_last_machine_ID"] + 1: 0.3,
+#         Special_Machine_ID["L2_last_machine_ID"] + 2: group_spacing,
+#         Special_Machine_ID["L4_last_machine_ID"] + 1: group_spacing
+#     }
+#
+#     ans = []
+#
+#     for machine_index, Machine in enumerate(Machines):
+#         start_times = Machine.O_start
+#         end_times = Machine.O_end
+#
+#         # 计算当前机器的实际绘图位置
+#         machine_id = machine_index + 1
+#         adjusted_index = machine_index + sum([offset for key, offset in machine_offset.items() if machine_id >= key])
+#
+#         mi = [machine_id]
+#
+#         for task_index, (start, end) in enumerate(zip(start_times, end_times)):
+#             job_serial_number_val = Machine.assigned_task[task_index][0]
+#             color = color_map.get(job_serial_number_val, 'gray')
+#
+#             # 根据工件组分配标签前缀
+#             if job_serial_number_val in job_groups['Reds']:
+#                 b = f"P{job_serial_number_val}A"
+#             elif job_serial_number_val in job_groups['Blues']:
+#                 b = f"P{job_serial_number_val}B"
+#             elif job_serial_number_val in job_groups['Greens']:
+#                 b = f"P{job_serial_number_val}C"
+#             elif job_serial_number_val in job_groups['Oranges']:
+#                 b = f"P{job_serial_number_val}D"
+#             elif job_serial_number_val in job_groups['Purples']:
+#                 b = f"P{job_serial_number_val}E"
+#             elif job_serial_number_val in job_groups['YlOrBr']:
+#                 b = f"P{job_serial_number_val}F"
+#             elif job_serial_number_val in job_groups['PuBu']:
+#                 b = f"P{job_serial_number_val}G"
+#             elif job_serial_number_val in job_groups['Greys']:
+#                 b = f"P{job_serial_number_val}MTZ1"
+#             elif job_serial_number_val in job_groups['BuGn']:
+#                 b = f"P{job_serial_number_val}MTZ2"
+#             elif job_serial_number_val in job_groups['RdPu']:
+#                 b = f"P{job_serial_number_val}MTZ3"
+#
+#             # 产线最后一台机器标记为F前缀
+#             if machine_id in (Special_Machine_ID["L1_last_machine_ID"],
+#                               Special_Machine_ID["L2_last_machine_ID"],
+#                               Special_Machine_ID["L3_last_machine_ID"],
+#                               Special_Machine_ID["L4_last_machine_ID"]):
+#                 b = 'F' + b[1:]
+#
+#             # 绘制甘特条
+#             plt.barh(adjusted_index, width=end - start, height=0.8, left=start,
+#                      color=color, edgecolor='black')
+#             plt.text(x=start + (end - start) / 2, y=adjusted_index,
+#                      s=b, va='center', ha='center')
+#
+#             mi.append(b)
+#
+#         ans.append(mi)
+#
+#     # 设置Y轴刻度标签
+#     yticks = []
+#     yticklabels = []
+#     for i, machine in enumerate(Machines, start=1):
+#         adjusted_index = i - 1 + sum([offset for key, offset in machine_offset.items() if i >= key])
+#         yticks.append(adjusted_index)
+#         yticklabels.append(f'M{i}')
+#
+#     plt.yticks(yticks, yticklabels)
+#
+#     # 添加组标签
+#     group_labels = {
+#         'Line1': (0 + Special_Machine_ID["L1_last_machine_ID"] + 1) / 2 - 0.5,
+#         'Line2': (Special_Machine_ID["L1_last_machine_ID"] + 2 + Special_Machine_ID[
+#             "L2_last_machine_ID"] + 1) / 2 - 1 + group_spacing + 0.4,
+#         'Line3': (Special_Machine_ID["L2_last_machine_ID"] + 2 + Special_Machine_ID[
+#             "L3_last_machine_ID"] + 1) / 2 + 1 + group_spacing + 0.8,
+#         'Line4': (Special_Machine_ID["L4_last_machine_ID"] + 1 + Special_Machine_ID[
+#             "L4_last_machine_ID"] + 1) / 2 + 1 + group_spacing + 2.8
+#     }
+#
+#     # 绘制组标签
+#     for label, position in group_labels.items():
+#         plt.text(-1.5, position, label, fontsize=12, rotation=90, va='center', ha='right')
+#
+#     # 在横轴上标出tn数组中的各个时刻，并画垂直虚线
+#     for t in tn:
+#         t_rounded = round(t, 2)
+#         plt.axvline(x=t_rounded, color='gray', linestyle='--', linewidth=0.8)
+#         plt.text(x=t_rounded + 0.2, y=-1.2, s=f'{t_rounded:.2f}', ha='center', va='top', fontsize=12)
+#
+#     plt.ylabel('Line', labelpad=20, fontsize=12)
+#     plt.xlabel('makespan (minute)', fontsize=12)
+#     plt.tight_layout()
+#     plt.savefig('优化后排程方案的甘特图.png', bbox_inches='tight')
+#     plt.show()
+#
+#     return ans
 
 
 def run_single_experiment(run_num: int, Job_serial_number: Dict[str, List[str]],
@@ -518,6 +560,9 @@ if __name__ == '__main__':
     #   'randomDataset/small' - 随机数据集中的small规模
     #   'randomDataset/middle/SET3' - 随机数据集中的middle规模下的SET3
     #   以此类推...
-    DATASET_TYPE = 'randomDataset/middle/SET3'
+
+    # DATASET_TYPE = 'randomDataset/middle/SET1'
+    DATASET_TYPE = None
+
     run_number_each_experiment = 1    # 每个实验case跑的次数
     main(DATASET_TYPE)
