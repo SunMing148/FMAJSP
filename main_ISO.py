@@ -564,5 +564,5 @@ if __name__ == '__main__':
     # DATASET_TYPE = 'randomDataset/middle/SET1'
     DATASET_TYPE = None
 
-    run_number_each_experiment = 1    # 每个实验case跑的次数
+    run_number_each_experiment = 12    # 每个实验case跑的次数
     main(DATASET_TYPE)
