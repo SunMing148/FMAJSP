@@ -315,12 +315,12 @@ def run_single_experiment(run_num: int, Job_serial_number: Dict[str, List[str]],
     print("配套时刻为：", tn)
 
     # 绘制适应度收敛图
-    x = list(range(s.Max_Itertions + 1))
-    plt.plot(x, Best_fit, '-k')
-    plt.ylabel('Fitness')
-    plt.xlabel('Iteraions')
-    plt.savefig('适应度收敛图.png')
-    plt.show()
+    # x = list(range(s.Max_Itertions + 1))
+    # plt.plot(x, Best_fit, '-k')
+    # plt.ylabel('Fitness')
+    # plt.xlabel('Iteraions')
+    # plt.savefig('适应度收敛图.png')
+    # plt.show()
     print("每代最好适应度Best_fit：", Best_fit)
 
     end_time = time.time()
@@ -562,7 +562,7 @@ if __name__ == '__main__':
     #   以此类推...
 
     # DATASET_TYPE = 'randomDataset/middle/SET1'
-    DATASET_TYPE = None
+    DATASET_TYPE = 'randomDataset'
 
     run_number_each_experiment = 12    # 每个实验case跑的次数
     main(DATASET_TYPE)
