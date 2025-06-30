@@ -251,7 +251,7 @@ def run_single_experiment(run_num: int, Job_serial_number: Dict[str, List[str]],
     female_best_fitness_individual = female[female_fitness_best_index, :]
 
     # 迭代过程
-    for t in range(1, s.Max_Itertions + 1):
+    for t in range(1, s.Max_Itertions + 1):   # t从1开始取值
         print('-' * 30)
         print(f"iter_{t}")
         temp = math.exp(-(t / s.Max_Itertions))

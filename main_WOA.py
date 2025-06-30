@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from Decode import Decode
 from Encode import Encode
-from SO import SO   # 导入此是未改进的标准SO
+from WOA import WOA  # 导入此是标准的WOA
 import os
 import re
 import importlib.util
@@ -45,7 +45,6 @@ def generate_color_map(Job_serial_number: Dict[str, List[str]]) -> (Dict[str, An
             color_map[job_id] = color
 
     return color_map, job_groups
-
 
 def Gantt(Machines, tn, Job_serial_number, Special_Machine_ID) -> List[List[Any]]:     # 只输出结果实际并不画图
     """绘制甘特图，增加Job_serial_number和Special_Machine_ID参数"""
@@ -201,6 +200,7 @@ def Gantt(Machines, tn, Job_serial_number, Special_Machine_ID) -> List[List[Any]
 #
 #     return ans
 
+
 def run_single_experiment(run_num: int, Job_serial_number: Dict[str, List[str]],
                           Processing_time: List[List[int]], J: List[List[int]],
                           J_num: int, M_num: int, O_num: int, kn: int,
@@ -211,13 +211,18 @@ def run_single_experiment(run_num: int, Job_serial_number: Dict[str, List[str]],
     Optimal_fit = 9999
     Optimal_CHS = None
 
+
     e = Encode(Processing_time, J, J_num, M_num)
     e.Get_Map_base_value()
-    s = SO(O_num, Processing_time, J, M_num, kn, Job_serial_number, Special_Machine_ID)
-    X = s.SO_initial()
+    w = WOA(O_num, Processing_time, J, M_num, kn, Job_serial_number, Special_Machine_ID)
+    X = w.WOA_initial()
+
+    # 初始化领导者的位置和分数
+    Leader_pos = np.zeros(w.Len_Chromo*2)
+    Leader_score = float('inf')
 
     Best_fit = []
-    Fit = s.fitness(e, X, O_num)
+    Fit = w.fitness(e, X, O_num)
 
     # 计算全局最佳适应度
     g_best = np.argmin(Fit)
@@ -225,101 +230,94 @@ def run_single_experiment(run_num: int, Job_serial_number: Dict[str, List[str]],
     Optimal_fit = gy_best
     Best_fit.append(round(gy_best, 3))
 
-    food = X[g_best, :]
-    food_mapped_individual = e.Individual_Coding_mapping_conversion(food)
+    Leader_pos = X[g_best, :]
+    Leader_pos_mapped_individual = e.Individual_Coding_mapping_conversion(Leader_pos)
     d = Decode(J, Processing_time, M_num, kn, Job_serial_number, Special_Machine_ID)
-    y, Matching_result_all, tn = d.decode(food_mapped_individual, O_num)
+    y, Matching_result_all, tn = d.decode(Leader_pos_mapped_individual, O_num)
     print("种群初始时food的适应度：", y)
     print("总配套关系为：", Matching_result_all)
     print("配套时刻：", tn)
 
-    # 种群分离
-    male_number = int(np.round(s.Pop_size / 2))
-    female_number = s.Pop_size - male_number
-    male = X[0:male_number, :]
-    female = X[male_number:, :]
-    male_individual_fitness = Fit[0:male_number]
-    female_individual_fitness = Fit[male_number:]
 
-    # 计算雌雄种群最佳个体
-    male_fitness_best_index = np.argmin(male_individual_fitness)
-    male_fitness_best_value = male_individual_fitness[male_fitness_best_index]
-    male_best_fitness_individual = male[male_fitness_best_index, :]
-
-    female_fitness_best_index = np.argmin(female_individual_fitness)
-    female_fitness_best_value = female_individual_fitness[female_fitness_best_index]
-    female_best_fitness_individual = female[female_fitness_best_index, :]
 
     # 迭代过程
-    for t in range(1, s.Max_Itertions + 1):
+    for t in range(w.Max_Itertions):      # 保证t从0开始取值
         print('-' * 30)
-        print(f"iter_{t}")
-        temp = math.exp(-(t / s.Max_Itertions))
-        # 计算食物的质量
-        quantity = s.C1 * math.exp((t - s.Max_Itertions) / s.Max_Itertions)
-
-        if quantity > 1:
-            quantity = 1
-
-        new_male = np.matrix(np.zeros((male_number, e.Len_Chromo * 2)))
-        new_female = np.matrix(np.zeros((female_number, e.Len_Chromo * 2)))
-
-        if quantity < s.food_threshold:
-            new_male, new_female = s.ExplorationPhaseNoFood(male_number, male, male_individual_fitness, new_male, female_number, female, female_individual_fitness, new_female)
-
-        else:
-            if temp > s.temp_threshold:
-                new_male, new_female = s.ExplorationPhaseFoodExists(food, temp, male_number, male, new_male,
-                                                                    female_number, female, new_female)
-            else:
-                model = random.random()
-                if model < s.model_threshold:
-                    new_male, new_female = s.fight(quantity, male, male_number, male_individual_fitness,
-                                                   male_fitness_best_value,
-                                                   male_best_fitness_individual, new_male, female, female_number,
-                                                   female_individual_fitness,
-                                                   female_fitness_best_value, female_best_fitness_individual,
-                                                   new_female)
-                else:
-                    new_male, new_female = s.mating(quantity, male, male_number, male_individual_fitness, new_male,
-                                                    female,
-                                                    female_number, female_individual_fitness, new_female)
-
-        # 更新种群和适应度
-        male_best_fitness_individual, female_best_fitness_individual, food, gy_best, male, male_individual_fitness, male_fitness_best_value, female, female_individual_fitness, female_fitness_best_value = s.update(
-            t, gy_best, O_num, e, food, male, male_number, male_individual_fitness, male_fitness_best_value, new_male,
-            male_best_fitness_individual, female, female_number, female_individual_fitness, female_fitness_best_value,
-            new_female, female_best_fitness_individual)
-
-        if gy_best < Optimal_fit:
-            Optimal_fit = gy_best
-            food_mapped_individual1 = e.Individual_Coding_mapping_conversion(food)
+        print(f"iter_{t+1}")
+        for i in range(w.Pop_size):
+            # 确保搜索代理在搜索空间内
+            X[i, :] = np.clip(X[i, :], w.lb, w.ub-0.0000001)
+            current_individual1 = X[i, :].copy()
+            # 计算适应度
+            current_mapped_individual1 = e.Individual_Coding_mapping_conversion(current_individual1)
             d = Decode(J, Processing_time, M_num, kn, Job_serial_number, Special_Machine_ID)
-            y, Matching_result_all, tn = d.decode(food_mapped_individual1, O_num)
+            fitness, Matching_result_all, tn = d.decode(current_mapped_individual1, O_num)
+
+            # 更新领导者
+            if fitness < Leader_score:
+                Leader_score = fitness
+                Leader_pos = X[i, :].copy()
+
+        # 更新 a
+        a = 2 - t * (2 / w.Max_Itertions)  # 线性从2降到0
+        a2 = -1 + t * (-1 / w.Max_Itertions)  # 线性从-1降到-2
+
+        # 更新搜索代理的位置
+        for i in range(w.Pop_size):
+            r1 = np.random.rand()
+            r2 = np.random.rand()
+
+            A = 2 * a * r1 - a  # 计算A
+            C = 2 * r2  # 计算C
+
+            b = 1  # 定义b
+            l = (a2 - 1) * np.random.rand() + 1  # 计算l
+
+            p = np.random.rand()
+
+            for j in range(w.Len_Chromo*2):
+                if p < 0.5:
+                    if abs(A) >= 1:
+                        rand_leader_index = np.random.randint(0, w.Pop_size)
+                        X_rand = X[rand_leader_index, :]
+                        D_X_rand = abs(C * X_rand[j] - X[i, j])
+                        X[i, j] = X_rand[j] - A * D_X_rand
+                    else:
+                        D_Leader = abs(C * Leader_pos[j] - X[i, j])
+                        X[i, j] = Leader_pos[j] - A * D_Leader
+                else:
+                    distance2Leader = abs(Leader_pos[j] - X[i, j])
+                    X[i, j] = distance2Leader * np.exp(b * l) * np.cos(l * 2 * np.pi) + Leader_pos[j]
+
+        if Leader_score < Optimal_fit:
+            Optimal_fit = Leader_score
+            Leader_pos_mapped_individual1 = e.Individual_Coding_mapping_conversion(Leader_pos)
+            d = Decode(J, Processing_time, M_num, kn, Job_serial_number, Special_Machine_ID)
+            y, Matching_result_all, tn = d.decode(Leader_pos_mapped_individual1, O_num)
             ans = Gantt(d.Machines, tn, Job_serial_number, Special_Machine_ID)
             print("每台机器上工件的加工顺序：", ans)
             print("总配套关系为：", Matching_result_all)
             print("配套时刻为：", tn)
 
-        print("当前代最优适应度：", round(gy_best, 3))
-        Best_fit.append(round(gy_best, 3))
+        print("当前代最优适应度：", round(Leader_score, 3))
+        Best_fit.append(round(Leader_score, 3))
 
     # 最后一次迭代结果
-    food_mapped_individual1 = e.Individual_Coding_mapping_conversion(food)
+    Leader_pos_mapped_individual1 = e.Individual_Coding_mapping_conversion(Leader_pos)
     d = Decode(J, Processing_time, M_num, kn, Job_serial_number, Special_Machine_ID)
-    y, Matching_result_all, tn = d.decode(food_mapped_individual1, O_num)
+    y, Matching_result_all, tn = d.decode(Leader_pos_mapped_individual1, O_num)
     ans = Gantt(d.Machines, tn, Job_serial_number, Special_Machine_ID)
     print("每台机器上工件的加工顺序：", ans)
     print("总配套关系为：", Matching_result_all)
     print("配套时刻为：", tn)
 
     # 绘制适应度收敛图
-    # x = list(range(s.Max_Itertions + 1))
-    # plt.plot(x, Best_fit, '-k')
-    # plt.ylabel('Fitness')
-    # plt.xlabel('Iteraions')
-    # plt.savefig('适应度收敛图.png')
-    # plt.show()
+    x = list(range(w.Max_Itertions + 1))
+    plt.plot(x, Best_fit, '-k')
+    plt.ylabel('Fitness')
+    plt.xlabel('Iteraions')
+    plt.savefig('适应度收敛图.png')
+    plt.show()
     print("每代最好适应度Best_fit：", Best_fit)
 
     end_time = time.time()
@@ -339,9 +337,9 @@ def run_single_experiment(run_num: int, Job_serial_number: Dict[str, List[str]],
 
 def run_experiment_for_dataset(dataset_path: str, dataset_name: str, result_subdir: str) -> None:
     """为指定数据集运行实验，result_subdir指定结果子目录"""
-    result_dir = os.path.join('SO_result', result_subdir)
+    result_dir = os.path.join('WOA_result', result_subdir)
     os.makedirs(result_dir, exist_ok=True)
-    result_file = os.path.join(result_dir, f"{dataset_name}_SO_result.txt")
+    result_file = os.path.join(result_dir, f"{dataset_name}_WOA_result.txt")
     results = []
 
     # 加载数据集模块并获取变量
@@ -559,6 +557,9 @@ if __name__ == '__main__':
     #   'randomDataset/small' - 随机数据集中的small规模
     #   'randomDataset/middle/SET3' - 随机数据集中的middle规模下的SET3
     #   以此类推...
+
+    # DATASET_TYPE = 'randomDataset'
     DATASET_TYPE = None
+
     run_number_each_experiment = 12    # 每个实验case跑的次数
     main(DATASET_TYPE)
