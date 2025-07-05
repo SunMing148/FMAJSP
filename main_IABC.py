@@ -1,3 +1,4 @@
+import copy
 import math
 import random
 import time
@@ -5,13 +6,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 from Decode import Decode
 from Encode import Encode
-from MWOA import WOA  # 导入此是标准的WOA
+from IABC import ABC  # 导入此是标准的WOA
 import os
 import re
 import importlib.util
 from typing import List, Dict, Any
 
-# 此算法对应论文：面向柔性作业车间调度的多策略鲸鱼优化算法_亓祥波.pdf
+# 此算法对应论文：
 
 def generate_color_map(Job_serial_number: Dict[str, List[str]]) -> (Dict[str, Any], Dict[str, List[str]]):
     """生成颜色映射表，接收Job_serial_number作为参数"""
@@ -215,116 +216,123 @@ def run_single_experiment(run_num: int, Job_serial_number: Dict[str, List[str]],
 
     e = Encode(Processing_time, J, J_num, M_num)
     e.Get_Map_base_value()
-    w = WOA(O_num, Processing_time, J, M_num, kn, Job_serial_number, Special_Machine_ID)
-    X = w.WOA_initial()
+    a = ABC(O_num, Processing_time, J, M_num, kn, Job_serial_number, Special_Machine_ID)
+    X = a.ABC_initial()
 
-    # 初始化领导者的位置和分数
-    Leader_pos = np.zeros(w.Len_Chromo*2)
-    Leader_score = float('inf')
+    L = round(0.6 * O_num*2 * a.Pop_size)  # limit 参数
+    C = np.zeros([a.Pop_size, 1])  # 计数器，用于与limit进行比较判定接下来的操作
+    nOnlooker = a.Pop_size  # 引领蜂数量
 
     Best_fit = []
-    Fit = w.fitness(e, X, O_num)
+    Fit = a.fitness(e, X, O_num)
+    Fit, sortIndex = a.SortFitness(Fit)  # 对适应度值排序
+    X = a.SortPosition(X, sortIndex)  # 种群排序
+
 
     # 计算全局最佳适应度
-    g_best = np.argmin(Fit)
-    gy_best = Fit[g_best]
+    gy_best = copy.copy(Fit[0])
     Optimal_fit = gy_best
     Best_fit.append(round(gy_best, 3))
 
-    Leader_pos = X[g_best, :]
-    Leader_pos_mapped_individual = e.Individual_Coding_mapping_conversion(Leader_pos)
+    GbestPositon = copy.copy(X[0, :])  # 记录最优位置
+    GbestPositon_mapped_individual = e.Individual_Coding_mapping_conversion(GbestPositon)
     d = Decode(J, Processing_time, M_num, kn, Job_serial_number, Special_Machine_ID)
-    y, Matching_result_all, tn = d.decode(Leader_pos_mapped_individual, O_num)
+    y, Matching_result_all, tn = d.decode(GbestPositon_mapped_individual, O_num)
     print("种群初始时food的适应度：", y)
     print("总配套关系为：", Matching_result_all)
     print("配套时刻：", tn)
 
+    Xnew = np.zeros([a.Pop_size, a.Len_Chromo*2])
+    FitNew = copy.copy(Fit)
+
     # 迭代过程
-    for t in range(w.Max_Itertions):      # 保证t从0开始取值
+    for t in range(a.Max_Itertions):      # 保证t从0开始取值
         print('-' * 30)
         print(f"iter_{t+1}")
-        for i in range(w.Pop_size):
-            # 确保搜索代理在搜索空间内
-            X[i, :] = np.clip(X[i, :], w.lb, w.ub-0.0000001)
-            current_individual1 = X[i, :].copy()
-            # 计算适应度
-            current_mapped_individual1 = e.Individual_Coding_mapping_conversion(current_individual1)
+
+        '''引领蜂搜索'''
+        for i in range(a.Pop_size):
+            k = np.random.randint(a.Pop_size)  # 随机选择一个个体
+            while (k == i):  # 当k=i时，再次随机选择，直到k不等于i
+                k = np.random.randint(a.Pop_size)
+            phi = (2 * np.random.random([1, a.Len_Chromo*2]) - 1)
+            Xnew[i, :] = X[i, :] + phi * (X[i, :] - X[k, :])  # 公式(2.2)位置更新
+            Xnew[i, :] = np.clip(Xnew[i, :], a.lb, a.ub - 0.0000001) # 边界检查
+        FitNew = a.fitness(e, Xnew, O_num)  # 计算适应度值
+        for i in range(a.Pop_size):
+            if FitNew[i] < Fit[i]:  # 如果适应度值更优，替换原始位置
+                X[i, :] = copy.copy(Xnew[i, :])
+                Fit[i] = copy.copy(FitNew[i])
+            else:
+                C[i] = C[i] + 1  # 如果位置没有更新，累加器+1
+
+        # 计算选择适应度权重
+        F = np.zeros([a.Pop_size, 1])
+        MeanCost = np.mean(Fit)
+        for i in range(a.Pop_size):
+            F[i] = np.exp(-Fit[i] / MeanCost)
+        P = F / sum(F)  # 式（2.4）
+
+        '''侦察蜂搜索'''
+        for m in range(nOnlooker):
+            i = a.RouletteWheelSelection(P)  # 轮盘赌测量选择个体
+            k = np.random.randint(a.Pop_size)  # 随机选择个体
+            while (k == i):
+                k = np.random.randint(a.Pop_size)
+            phi = (2 * np.random.random([1, a.Len_Chromo*2]) - 1)
+            Xnew[i, :] = X[i, :] + phi * (X[i, :] - X[k, :])  # 位置更新
+            Xnew[i, :] = np.clip(Xnew[i, :], a.lb, a.ub - 0.0000001)  # 边界检查
+        FitNew = a.fitness(e, Xnew, O_num)  # 计算适应度值
+        for i in range(a.Pop_size):
+            if FitNew[i] < Fit[i]:  # 如果适应度值更优，替换原始位置
+                X[i, :] = copy.copy(Xnew[i, :])
+                Fit[i] = copy.copy(FitNew[i])
+            else:
+                C[i] = C[i] + 1  # 如果位置没有更新，累加器+1
+
+        '''判断limit条件，并进行更新'''
+        for i in range(a.Pop_size):
+            if C[i] >= L:
+                for j in range(a.Len_Chromo*2):
+                    X[i, j] = a.lb + random.random() * (a.ub - a.lb)
+                    C[i] = 0
+
+        Fit = a.fitness(e, X, O_num)
+        Fit, sortIndex = a.SortFitness(Fit)  # 对适应度值排序
+        X = a.SortPosition(X, sortIndex)  # 种群排序
+
+
+        if Fit[0] < Optimal_fit:
+            Optimal_fit = copy.copy(Fit[0])
+            GbestPositon = copy.copy(X[0, :])  # 记录最优位置
+
+            GbestPositon_mapped_individual1 = e.Individual_Coding_mapping_conversion(GbestPositon)
             d = Decode(J, Processing_time, M_num, kn, Job_serial_number, Special_Machine_ID)
-            fitness, Matching_result_all, tn = d.decode(current_mapped_individual1, O_num)
-
-            # 更新领导者
-            if fitness < Leader_score:
-                Leader_score = fitness
-                Leader_pos = X[i, :].copy()
-
-        # 复现论文中的最优混沌策略
-        Leader_pos, Leader_score = w.optimal_chaos_strategy(e, Leader_pos, Leader_score)
-
-        # 更新 a
-        # a = 2 - t * (2 / w.Max_Itertions)  # 线性从2降到0
-        a = (2 - 2 * t / w.Max_Itertions) * (1 - t ** 3 / w.Max_Itertions ** 3)  # 复现论文中的公式
-        a2 = -1 + t * (-1 / w.Max_Itertions)  # 线性从-1降到-2
-
-        omega = (2 / math.pi) * math.asin(t / w.Max_Itertions) # 复现论文中的公式
-
-        # 更新搜索代理的位置
-        for i in range(w.Pop_size):
-            r1 = np.random.rand()
-            r2 = np.random.rand()
-
-            A = 2 * a * r1 - a  # 计算A
-            C = 2 * r2  # 计算C
-
-            b = 1  # 定义b
-            l = (a2 - 1) * np.random.rand() + 1  # 计算l
-
-            p = np.random.rand()
-
-            for j in range(w.Len_Chromo*2):
-                if p < 0.5:
-                    if abs(A) >= 1:
-                        rand_leader_index = np.random.randint(0, w.Pop_size)
-                        X_rand = X[rand_leader_index, :]
-                        D_X_rand = abs(C * X_rand[j] - X[i, j])
-                        X[i, j] = omega * X_rand[j] - A * D_X_rand
-                    else:
-                        D_Leader = abs(C * Leader_pos[j] - X[i, j])
-                        X[i, j] = omega * Leader_pos[j] - A * D_Leader
-                else:
-                    distance2Leader = abs(Leader_pos[j] - X[i, j])
-                    X[i, j] = distance2Leader * np.exp(b * l) * np.cos(l * 2 * np.pi) + (1 - omega) * Leader_pos[j]
-
-            # TODO 在此待引入差分进化DE算子
-
-        if Leader_score < Optimal_fit:
-            Optimal_fit = Leader_score
-            Leader_pos_mapped_individual1 = e.Individual_Coding_mapping_conversion(Leader_pos)
-            d = Decode(J, Processing_time, M_num, kn, Job_serial_number, Special_Machine_ID)
-            y, Matching_result_all, tn = d.decode(Leader_pos_mapped_individual1, O_num)
+            y, Matching_result_all, tn = d.decode(GbestPositon_mapped_individual1, O_num)
             ans = Gantt(d.Machines, tn, Job_serial_number, Special_Machine_ID)
             print("每台机器上工件的加工顺序：", ans)
             print("总配套关系为：", Matching_result_all)
             print("配套时刻为：", tn)
 
-        print("当前代最优适应度：", round(Leader_score, 3))
-        Best_fit.append(round(Leader_score, 3))
+        print("当前代最优适应度：", round(Optimal_fit, 3))
+        Best_fit.append(round(Optimal_fit, 3))
 
     # 最后一次迭代结果
-    Leader_pos_mapped_individual1 = e.Individual_Coding_mapping_conversion(Leader_pos)
+    GbestPositon_mapped_individual1 = e.Individual_Coding_mapping_conversion(GbestPositon)
     d = Decode(J, Processing_time, M_num, kn, Job_serial_number, Special_Machine_ID)
-    y, Matching_result_all, tn = d.decode(Leader_pos_mapped_individual1, O_num)
+    y, Matching_result_all, tn = d.decode(GbestPositon_mapped_individual1, O_num)
     ans = Gantt(d.Machines, tn, Job_serial_number, Special_Machine_ID)
     print("每台机器上工件的加工顺序：", ans)
     print("总配套关系为：", Matching_result_all)
     print("配套时刻为：", tn)
 
     # 绘制适应度收敛图
-    x = list(range(w.Max_Itertions + 1))
-    plt.plot(x, Best_fit, '-k')
-    plt.ylabel('Fitness')
-    plt.xlabel('Iteraions')
-    plt.savefig('适应度收敛图.png')
-    plt.show()
+    # x = list(range(a.Max_Itertions + 1))
+    # plt.plot(x, Best_fit, '-k')
+    # plt.ylabel('Fitness')
+    # plt.xlabel('Iteraions')
+    # plt.savefig('适应度收敛图.png')
+    # plt.show()
     print("每代最好适应度Best_fit：", Best_fit)
 
     end_time = time.time()
@@ -344,9 +352,9 @@ def run_single_experiment(run_num: int, Job_serial_number: Dict[str, List[str]],
 
 def run_experiment_for_dataset(dataset_path: str, dataset_name: str, result_subdir: str) -> None:
     """为指定数据集运行实验，result_subdir指定结果子目录"""
-    result_dir = os.path.join('MWOA_result', result_subdir)
+    result_dir = os.path.join('IABC_result', result_subdir)
     os.makedirs(result_dir, exist_ok=True)
-    result_file = os.path.join(result_dir, f"{dataset_name}_MWOA_result.txt")
+    result_file = os.path.join(result_dir, f"{dataset_name}_IABC_result.txt")
     results = []
 
     # 加载数据集模块并获取变量
