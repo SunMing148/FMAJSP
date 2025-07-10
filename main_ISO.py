@@ -11,6 +11,7 @@ import re
 import importlib.util
 from typing import List, Dict, Any
 
+# ISO改变:去掉非线性惯性权重，ExplorationPhaseFoodExists才是替换为WOA，ExplorationPhaseNoFood换回标准的
 
 def generate_color_map(Job_serial_number: Dict[str, List[str]]) -> (Dict[str, Any], Dict[str, List[str]]):
     """生成颜色映射表，接收Job_serial_number作为参数"""
@@ -249,14 +250,16 @@ def run_single_experiment(run_num: int, Job_serial_number: Dict[str, List[str]],
     female_fitness_best_index = np.argmin(female_individual_fitness)
     female_fitness_best_value = female_individual_fitness[female_fitness_best_index]
     female_best_fitness_individual = female[female_fitness_best_index, :]
-
+    count=0
     # 迭代过程
     for t in range(1, s.Max_Itertions + 1):   # t从1开始取值
         print('-' * 30)
         print(f"iter_{t}")
         temp = math.exp(-(t / s.Max_Itertions))
-        quantity = math.sin(random.random() + math.pi * t / 4 / s.Max_Itertions) * s.C1 * math.exp(
-            (t - s.Max_Itertions) / s.Max_Itertions)
+        # quantity = math.sin(random.random() + math.pi * t / 4 / s.Max_Itertions) * s.C1 * math.exp(
+        #     (t - s.Max_Itertions) / s.Max_Itertions)
+        quantity = s.C1 * math.exp((t - s.Max_Itertions) / s.Max_Itertions)
+
 
         if quantity > 1:
             quantity = 1
@@ -265,13 +268,12 @@ def run_single_experiment(run_num: int, Job_serial_number: Dict[str, List[str]],
         new_female = np.matrix(np.zeros((female_number, e.Len_Chromo * 2)))
 
         if quantity < s.food_threshold:
-            new_male, new_female = s.ExplorationPhaseNoFood(food, male_number, male, male_individual_fitness, new_male,
-                                                            female_number, female, female_individual_fitness,
-                                                            new_female)
+            new_male, new_female = s.ExplorationPhaseNoFood(male_number, male, male_individual_fitness, new_male, female_number, female, female_individual_fitness, new_female)
         else:
             if temp > s.temp_threshold:
                 new_male, new_female = s.ExplorationPhaseFoodExists(food, temp, male_number, male, new_male,
                                                                     female_number, female, new_female)
+                count = count + 1
             else:
                 model = random.random()
                 if model < s.model_threshold:
@@ -326,6 +328,7 @@ def run_single_experiment(run_num: int, Job_serial_number: Dict[str, List[str]],
     end_time = time.time()
     runtime = end_time - start_time
     print(f"程序运行时间为: {runtime:.3f}秒")
+    print("count:", count)
 
     return {
         "run_num": run_num,
@@ -340,7 +343,7 @@ def run_single_experiment(run_num: int, Job_serial_number: Dict[str, List[str]],
 
 def run_experiment_for_dataset(dataset_path: str, dataset_name: str, result_subdir: str) -> None:
     """为指定数据集运行实验，result_subdir指定结果子目录"""
-    result_dir = os.path.join('ISO_result', result_subdir)
+    result_dir = os.path.join('ISO_result2', result_subdir)
     os.makedirs(result_dir, exist_ok=True)
     result_file = os.path.join(result_dir, f"{dataset_name}_ISO_result.txt")
     results = []
@@ -562,7 +565,8 @@ if __name__ == '__main__':
     #   以此类推...
 
     # DATASET_TYPE = 'randomDataset/middle/SET1'
-    DATASET_TYPE = 'randomDataset'
+    # DATASET_TYPE = 'factoryDataset'
+    DATASET_TYPE = None
 
     run_number_each_experiment = 12    # 每个实验case跑的次数
     main(DATASET_TYPE)

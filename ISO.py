@@ -8,7 +8,8 @@ class SO():
     def __init__(self, Len_Chromo, Processing_time, J, M_num, kn, Job_serial_number, Special_Machine_ID):
         self.Pop_size = 50  # 种群数量
 
-        self.C1 = 0.5     # self.C2 = 0.05 # 之前是0.5，改成0.05好像更好了，也不一定
+        self.C1 = 0.5
+        self.C2 = 0.05 # 之前是0.5，改成0.05好像更好了，也不一定
         self.C3 = 2 #
 
         self.food_threshold = 0.28 # 有没有食物的阈值
@@ -76,39 +77,81 @@ class SO():
         return Fit
 
     # 标准蛇优化算法的ExplorationPhaseNoFood
-    # def ExplorationPhaseNoFood(self, male_number, male, male_individual_fitness, new_male, female_number, female, female_individual_fitness, new_female):
-    #     # 先是雄性
-    #     for i in range(male_number):
-    #         for j in range(self.Len_Chromo*2):
-    #             # 先取得一个随机的个体
-    #             rand_leader_index = np.random.randint(0, male_number)
-    #             rand_male = male[rand_leader_index, :]
-    #             # 随机生成+或者是-,来判断当前的c2是取正还是负
-    #             negative_or_positive = np.random.randint(0, 2)
-    #             flag = self.vec_flag[negative_or_positive]
-    #             # 计算Am,np.spacing(1)是为了防止进行除法运算的时候出现除0操作
-    #             am = math.exp(
-    #                 -(male_individual_fitness[rand_leader_index] / (male_individual_fitness[i] + np.spacing(1))))
-    #             new_male[i, j] = rand_male[j] + flag * self.C2 * am * (
-    #                     (self.ub - self.lb) * random.random() + self.lb)
-    #     for i in range(female_number):
-    #         for j in range(self.Len_Chromo*2):
-    #             # 先取得一个随机的个体
-    #             rand_leader_index = np.random.randint(0, female_number)
-    #             rand_female = female[rand_leader_index, :]
-    #             # 随机生成+或者是-,来判断当前的c2是取正还是负
-    #             negative_or_positive = np.random.randint(0, 2)
-    #             flag = self.vec_flag[negative_or_positive]
-    #             # 计算Am,np.spacing(1)是为了防止进行除法运算的时候出现除0操作
-    #             am = math.exp(-(female_individual_fitness[rand_leader_index] / (
-    #                     female_individual_fitness[i] + np.spacing(1))))
-    #             new_female[i, j] = rand_female[j] + flag * self.C2 * am * (
-    #                     (self.ub - self.lb) * random.random() + self.lb)
-    #     return new_male, new_female
+    def ExplorationPhaseNoFood(self, male_number, male, male_individual_fitness, new_male, female_number, female, female_individual_fitness, new_female):
+        # 先是雄性
+        for i in range(male_number):
+            for j in range(self.Len_Chromo*2):
+                # 先取得一个随机的个体
+                rand_leader_index = np.random.randint(0, male_number)
+                rand_male = male[rand_leader_index, :]
+                # 随机生成+或者是-,来判断当前的c2是取正还是负
+                negative_or_positive = np.random.randint(0, 2)
+                flag = self.vec_flag[negative_or_positive]
+                # 计算Am,np.spacing(1)是为了防止进行除法运算的时候出现除0操作
+                am = math.exp(
+                    -(male_individual_fitness[rand_leader_index] / (male_individual_fitness[i] + np.spacing(1))))
+                new_male[i, j] = rand_male[j] + flag * self.C2 * am * (
+                        (self.ub - self.lb) * random.random() + self.lb)
+        for i in range(female_number):
+            for j in range(self.Len_Chromo*2):
+                # 先取得一个随机的个体
+                rand_leader_index = np.random.randint(0, female_number)
+                rand_female = female[rand_leader_index, :]
+                # 随机生成+或者是-,来判断当前的c2是取正还是负
+                negative_or_positive = np.random.randint(0, 2)
+                flag = self.vec_flag[negative_or_positive]
+                # 计算Am,np.spacing(1)是为了防止进行除法运算的时候出现除0操作
+                am = math.exp(-(female_individual_fitness[rand_leader_index] / (
+                        female_individual_fitness[i] + np.spacing(1))))
+                new_female[i, j] = rand_female[j] + flag * self.C2 * am * (
+                        (self.ub - self.lb) * random.random() + self.lb)
+        return new_male, new_female
 
     #算法改进：将将勘探阶段的位置更新公式替换为WOA螺旋。 TODO
-    def ExplorationPhaseNoFood(self, food, male_number, male, male_individual_fitness, new_male, female_number, female,
-                               female_individual_fitness, new_female):
+    # def ExplorationPhaseNoFood(self, food, male_number, male, male_individual_fitness, new_male, female_number, female,
+    #                            female_individual_fitness, new_female):
+    #     # 对雄性进行处理
+    #     for i in range(male_number):
+    #         b = 1
+    #         l = 2 * random.random() - 1  # [-1,1]之间的随机数
+    #         temp = np.zeros_like(male[i])
+    #         for j in range(self.Len_Chromo * 2):
+    #             distance2Leader = np.abs(food[j] - male[i, j])
+    #             temp[j] = distance2Leader * np.exp(b * l) * np.cos(l * 2 * math.pi) + food[j]
+    #             # 更新雄性的位置
+    #         new_male[i, :] = temp
+    #
+    #     # 对雌性进行处理
+    #     for i in range(female_number):
+    #         b = 1
+    #         l = 2 * random.random() - 1  # [-1,1]之间的随机数
+    #         temp = np.zeros_like(female[i])
+    #         for j in range(self.Len_Chromo * 2):
+    #             distance2Leader = np.abs(food[j] - female[i, j])
+    #             temp[j] = distance2Leader * np.exp(b * l) * np.cos(l * 2 * math.pi) + food[j]
+    #             # 更新雄性的位置
+    #         new_female[i, :] = temp
+    #
+    #     return new_male, new_female
+
+    # def ExplorationPhaseFoodExists(self, food, temp, male_number, male, new_male, female_number, female, new_female):
+    #     # 更新雄性的位置
+    #     for i in range(male_number):
+    #         # 随机生成+或者是-,来判断当前的c2是取正还是负
+    #         negative_or_positive = np.random.randint(0, 2)
+    #         flag = self.vec_flag[negative_or_positive]
+    #         for j in range(self.Len_Chromo*2):
+    #             new_male[i, j] = food[j] + flag * self.C3 * temp * random.random() * (food[j] - male[i, j])
+    #     # 更新雌性的位置
+    #     for i in range(female_number):
+    #         # 随机生成+或者是-,来判断当前的c2是取正还是负
+    #         negative_or_positive = np.random.randint(0, 2)
+    #         flag = self.vec_flag[negative_or_positive]
+    #         for j in range(self.Len_Chromo*2):
+    #             new_female[i, j] = food[j] + flag * self.C3 * temp * random.random() * (food[j] - female[i, j])
+    #     return new_male, new_female
+
+    def ExplorationPhaseFoodExists(self, food, temp, male_number, male, new_male, female_number, female, new_female):
         # 对雄性进行处理
         for i in range(male_number):
             b = 1
@@ -131,23 +174,6 @@ class SO():
                 # 更新雄性的位置
             new_female[i, :] = temp
 
-        return new_male, new_female
-
-    def ExplorationPhaseFoodExists(self, food, temp, male_number, male, new_male, female_number, female, new_female):
-        # 更新雄性的位置
-        for i in range(male_number):
-            # 随机生成+或者是-,来判断当前的c2是取正还是负
-            negative_or_positive = np.random.randint(0, 2)
-            flag = self.vec_flag[negative_or_positive]
-            for j in range(self.Len_Chromo*2):
-                new_male[i, j] = food[j] + flag * self.C3 * temp * random.random() * (food[j] - male[i, j])
-        # 更新雌性的位置
-        for i in range(female_number):
-            # 随机生成+或者是-,来判断当前的c2是取正还是负
-            negative_or_positive = np.random.randint(0, 2)
-            flag = self.vec_flag[negative_or_positive]
-            for j in range(self.Len_Chromo*2):
-                new_female[i, j] = food[j] + flag * self.C3 * temp * random.random() * (food[j] - female[i, j])
         return new_male, new_female
 
     def fight(self, quantity, male, male_number, male_individual_fitness, male_fitness_best_value, male_best_fitness_individual, new_male, female, female_number, female_individual_fitness, female_fitness_best_value, female_best_fitness_individual, new_female):
