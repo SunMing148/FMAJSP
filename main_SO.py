@@ -339,7 +339,7 @@ def run_single_experiment(run_num: int, Job_serial_number: Dict[str, List[str]],
 
 def run_experiment_for_dataset(dataset_path: str, dataset_name: str, result_subdir: str) -> None:
     """为指定数据集运行实验，result_subdir指定结果子目录"""
-    result_dir = os.path.join('SO_result', result_subdir)
+    result_dir = os.path.join('SO_result_redo', result_subdir)
     os.makedirs(result_dir, exist_ok=True)
     result_file = os.path.join(result_dir, f"{dataset_name}_SO_result.txt")
     results = []
@@ -411,7 +411,7 @@ def get_dataset_files(dataset_type: str = None) -> List[Dict[str, str]]:
         dataset_type: 可选值：None（所有）, 'factoryDataset', 'randomDataset', 'randomDataset/small', 'randomDataset/middle', 'randomDataset/big', 'randomDataset/small/SET1', 等
     """
     dataset_files = []
-    base_dir = 'dataset'
+    base_dir = 'dataset_redo'
 
     # 处理特殊情况：factoryDataset
     if dataset_type == 'factoryDataset':
@@ -559,6 +559,6 @@ if __name__ == '__main__':
     #   'randomDataset/small' - 随机数据集中的small规模
     #   'randomDataset/middle/SET3' - 随机数据集中的middle规模下的SET3
     #   以此类推...
-    DATASET_TYPE = None
+    DATASET_TYPE = 'randomDataset'
     run_number_each_experiment = 12    # 每个实验case跑的次数
     main(DATASET_TYPE)
