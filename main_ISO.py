@@ -343,7 +343,7 @@ def run_single_experiment(run_num: int, Job_serial_number: Dict[str, List[str]],
 
 def run_experiment_for_dataset(dataset_path: str, dataset_name: str, result_subdir: str) -> None:
     """为指定数据集运行实验，result_subdir指定结果子目录"""
-    result_dir = os.path.join('ISO_result_redo', result_subdir)
+    result_dir = os.path.join('ISO_result_redo—temp', result_subdir)
     os.makedirs(result_dir, exist_ok=True)
     result_file = os.path.join(result_dir, f"{dataset_name}_ISO_result.txt")
     results = []
@@ -565,8 +565,8 @@ if __name__ == '__main__':
     #   以此类推...
 
     # DATASET_TYPE = 'randomDataset/middle/SET1'
-    # DATASET_TYPE = 'factoryDataset'
-    DATASET_TYPE = 'randomDataset'
+    DATASET_TYPE = 'factoryDataset'
+    # DATASET_TYPE = 'randomDataset'
 
     run_number_each_experiment = 12    # 每个实验case跑的次数
     main(DATASET_TYPE)
