@@ -1,4 +1,5 @@
 # 先运行update1,再运行update2，再去删每个矩阵的第一行末尾的]
+# 用于生成随机数据集
 import os
 import re
 import random
