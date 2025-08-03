@@ -1,0 +1,130 @@
+L(14,7,4,1)×P(1,1,1)×30
+Iteration 0
+        if algo_name == 'SOA':
+            population = population_history[4]
+        elif algo_name == 'ISOA':
+            population = population_history[1]
+        elif algo_name == 'ISOA-1':
+            population = population_history[1]
+			
+Iteration 50
+        if algo_name == 'SOA':
+            population = population_history[54]
+        elif algo_name == 'ISOA':
+            population = population_history[54]
+        elif algo_name == 'ISOA-1':
+            population = population_history[54]
+
+Iteration 75
+        if algo_name == 'SOA':
+            population = population_history[55]
+        elif algo_name == 'ISOA':
+            population = population_history[97]
+        elif algo_name == 'ISOA-1':
+            population = population_history[61]
+			
+##############################################################
+L(14,7,4,1)×P(2,2,2)×60
+Iteration 0
+        if algo_name == 'SOA':
+            population = population_history[3]
+        elif algo_name == 'ISOA':
+            population = population_history[1]
+        elif algo_name == 'ISOA-1':
+            population = population_history[1]
+			
+Iteration 50
+        if algo_name == 'SOA':
+            population = population_history[54]
+        elif algo_name == 'ISOA':
+            population = population_history[54]
+        elif algo_name == 'ISOA-1':
+            population = population_history[54]
+
+Iteration 75
+        if algo_name == 'SOA':
+            population = population_history[17]
+        elif algo_name == 'ISOA':
+            population = population_history[108]
+        elif algo_name == 'ISOA-1':
+            population = population_history[8]
+
+##############################################################
+L(14,7,4,1)×P(3,4,2)×90
+Iteration 0
+        if algo_name == 'SOA':
+            population = population_history[0]
+        elif algo_name == 'ISOA':
+            population = population_history[110]
+        elif algo_name == 'ISOA-1':
+            population = population_history[110]
+			
+Iteration 50
+        if algo_name == 'SOA':
+            population = population_history[53]
+        elif algo_name == 'ISOA':
+            population = population_history[53]
+        elif algo_name == 'ISOA-1':
+            population = population_history[53]
+
+Iteration 75
+        if algo_name == 'SOA':
+            population = population_history[18]
+        elif algo_name == 'ISOA':
+            population = population_history[125]
+        elif algo_name == 'ISOA-1':
+            population = population_history[63]
+			
+##############################################################
+L(14,7,4,1)×P(5,7,3)×150
+Iteration 0
+        if algo_name == 'SOA':
+            population = population_history[1]
+        elif algo_name == 'ISOA':
+            population = population_history[1]
+        elif algo_name == 'ISOA-1':
+            population = population_history[1]
+			
+Iteration 50
+        if algo_name == 'SOA':
+            population = population_history[53]
+        elif algo_name == 'ISOA':
+            population = population_history[53]
+        elif algo_name == 'ISOA-1':
+            population = population_history[53]
+
+Iteration 75
+        if algo_name == 'SOA':
+            population = population_history[74]
+        elif algo_name == 'ISOA':
+            population = population_history[115]
+        elif algo_name == 'ISOA-1':
+            population = population_history[74]
+
+##############################################################
+L(14,7,4,1)×P(7,9,5)×210
+Iteration 0
+        if algo_name == 'SOA':
+            population = population_history[2]
+        elif algo_name == 'ISOA':
+            population = population_history[1]
+        elif algo_name == 'ISOA-1':
+            population = population_history[1]
+			
+Iteration 50
+        if algo_name == 'SOA':
+            population = population_history[53]
+        elif algo_name == 'ISOA':
+            population = population_history[53]
+        elif algo_name == 'ISOA-1':
+            population = population_history[53]
+
+
+Iteration 75
+        if algo_name == 'SOA':
+            population = population_history[8]
+        elif algo_name == 'ISOA':
+            population = population_history[84]
+        elif algo_name == 'ISOA-1':
+            population = population_history[8]
+

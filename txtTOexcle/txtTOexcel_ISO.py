@@ -5,13 +5,13 @@ from openpyxl import load_workbook
 
 def main():
     # 设置文件夹路径和Excel文件路径
-    base_folder = r'result\ISO_result_redo\randomDatasetResult\big'
-    excel_file = 'temp.xlsx'
+    base_folder = r'result\ISO_result_redo\factoryDatasetResult'
+    excel_file = 'working.xlsx'
 
     # 加载Excel文件
     try:
         wb = load_workbook(excel_file)
-        ws = wb['big']
+        ws = wb['不同case实验数据工厂数据集']
     except Exception as e:
         print(f"加载Excel文件时出错: {e}")
         return
@@ -19,7 +19,7 @@ def main():
     # 创建一个字典，用于存储每个SET文件夹中的txt文件，键为L和P值的元组
     txt_files_dict = {}
     for set_num in range(1, 6):
-        set_folder = os.path.join(base_folder, f'SET{set_num}')
+        set_folder = os.path.join(base_folder)
         if not os.path.exists(set_folder):
             print(f"SET文件夹不存在: {set_folder}")
             continue
@@ -37,7 +37,7 @@ def main():
                 txt_files_dict[key] = os.path.join(set_folder, txt_file)
 
     # 处理Excel中的合并单元格
-    for i in range(0, 40):
+    for i in range(0, 5):
         # 计算合并单元格的范围和数据单元格的范围
         start_row = 3 + i * 15
         merge_range = f"B{start_row}:B{start_row + 14}"
