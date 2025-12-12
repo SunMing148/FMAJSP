@@ -1,0 +1,1 @@
+Instance_L(14,7,4)_P(3,1,4)_JCGA_result只跑了8次实验，从第9到第12次实验结果是从Instance_L(14,7,4)_P(3,1,4)_JCGA_resultold中拼合而来的。

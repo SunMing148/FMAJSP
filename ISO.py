@@ -6,7 +6,7 @@ from Decode import Decode
 # ISO 三种改进方式，加main中一种
 class SO():
     def __init__(self, Len_Chromo, Processing_time, J, M_num, kn, Job_serial_number, Special_Machine_ID):
-        self.Pop_size = 50  # 种群数量
+        self.Pop_size = 30  # 种群数量
 
         self.C1 = 0.5
         self.C2 = 0.05 # 之前是0.5，改成0.05好像更好了，也不一定
@@ -16,7 +16,7 @@ class SO():
         self.temp_threshold = 0.6 # 温度适不适合交配的阈值
         self.model_threshold = 0.62 # 模式阈值,当产生的随机值小于模式阈值就进入战斗模式，否则就进入交配模式
 
-        self.Max_Itertions = 125 # 最大迭代次数
+        self.Max_Itertions = 300 # 最大迭代次数
         self.Len_Chromo = Len_Chromo
 
         self.vec_flag = [1, -1]

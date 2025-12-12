@@ -79,6 +79,10 @@ def visualize_multiple_algorithms(algorithm_data, output_dir):
 # 使用示例
 if __name__ == "__main__":
     # 定义三个算法的数据路径
+    # Instance = "Instance_L(14,7,4)_P(1,1,1)"
+    # Instance = "Instance_L(14,7,4)_P(2,2,2)"
+    # Instance = "Instance_L(14,7,4)_P(3,4,2)"
+    # Instance = "Instance_L(14,7,4)_P(5,7,3)"
     Instance = "Instance_L(14,7,4)_P(7,9,5)"
 
     algorithm_files = {
