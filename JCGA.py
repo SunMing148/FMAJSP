@@ -5,7 +5,7 @@ from Decode import Decode
 
 class GA():
     def __init__(self, Len_Chromo, Processing_time, J, J_num, M_num, kn, Job_serial_number, Special_Machine_ID):
-        self.Pop_size = 30  # 种群数量
+        self.Pop_size = 60  # 种群数量
         self.Pc = 0.8  # 交叉概率
         self.Pm = 0.3  # 变异概率
         self.Pv = 0.5  # 选择何种方式进行交叉的概率阈值

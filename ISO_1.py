@@ -6,15 +6,15 @@ from Decode import Decode
 # ISO_1 与标准SO相比，仅多了种群初始化非线性混沌映射
 class SO():
     def __init__(self, Len_Chromo, Processing_time, J, M_num, kn, Job_serial_number, Special_Machine_ID):
-        self.Pop_size = 30  # 种群数量
+        self.Pop_size = 60  # 种群数量
 
         self.C1 = 0.5 #
         self.C2 = 0.05 # 之前是0.5，改成0.05好像更好了，也不一定
         self.C3 = 2 #
 
-        self.food_threshold = 0.28 # 有没有食物的阈值
-        self.temp_threshold = 0.6 # 温度适不适合交配的阈值
-        self.model_threshold = 0.62 # 模式阈值,当产生的随机值小于模式阈值就进入战斗模式，否则就进入交配模式
+        self.food_threshold = 0.42 # 有没有食物的阈值
+        self.temp_threshold = 0.55 # 温度适不适合交配的阈值
+        self.model_threshold = 0.64 # 模式阈值,当产生的随机值小于模式阈值就进入战斗模式，否则就进入交配模式
 
         self.Max_Itertions = 300 # 最大迭代次数
         self.Len_Chromo = Len_Chromo

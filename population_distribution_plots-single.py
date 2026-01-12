@@ -29,15 +29,15 @@ def visualize_multiple_algorithms(algorithm_data, output_dir):
 
     # 定义不同算法的样式 - 颜色和标记
     styles = {
-        'MISOA': {'color': 'blue', 'marker': 'o', 'label': 'MISOA'},
+        'CLSSOA': {'color': 'blue', 'marker': 'o', 'label': 'CLSSOA'},
         'SOA': {'color': 'red', 'marker': 'x', 'label': 'SOA'},
         'SOA-PWLCM': {'color': 'green', 'marker': '^', 'label': 'SOA-PWLCM'}
     }
 
     plt.figure(figsize=(10, 8))
 
-    # i = 75  # 第一章初稿对应：0/50/75
-    i = 200  # 第一章二稿对应：0/100/200
+    # i = 0  # 第一章初稿对应：0/50/75
+    i = 200  # 第一章二/三稿对应：0/100/200
 
     # 为每个算法处理并绘制当前迭代数据
     for algo_name, population_history in algorithm_data.items():
@@ -45,11 +45,11 @@ def visualize_multiple_algorithms(algorithm_data, output_dir):
         # population = population_history[i]
 
         if algo_name == 'SOA':
-            population = population_history[105]
-        elif algo_name == 'MISOA':
-            population = population_history[3]
+            population = population_history[262]
+        elif algo_name == 'CLSSOA':
+            population = population_history[52]
         elif algo_name == 'SOA-PWLCM':
-            population = population_history[105]
+            population = population_history[151]
 
         # 创建PCA模型，降维到二维（每个迭代单独做PCA以保证可比性）
         pca = PCA(n_components=2, random_state=42)  # 固定随机种子
@@ -68,10 +68,10 @@ def visualize_multiple_algorithms(algorithm_data, output_dir):
         )
 
     # 设置图表标题和坐标轴标签，增加字体大小
-    plt.title(f'L(14,7,4,1)×P(7,9,5)×210 - Iteration {i}', fontsize=20)  # 标题变大
+    plt.title(f'L(14,7,4,1)×P(1,1,1)×30 - Iteration {i}', fontsize=20)  # 标题变大
     plt.xlabel('Principal Component 1', fontsize=18)  # 横轴标签变大
     plt.ylabel('Principal Component 2', fontsize=18)  # 纵轴标签变大
-
+    # plt.ylim(-4, 8)
     # 添加图例（增大字体）和网格线
     plt.legend(fontsize=16)  # 图例变大
     plt.grid(True, linestyle='--', alpha=0.7)
@@ -81,7 +81,7 @@ def visualize_multiple_algorithms(algorithm_data, output_dir):
     # plt.yticks(fontsize=12)
 
     # 保存图像
-    plt.savefig(os.path.join(output_dir, f'L(14,7,4,1)×P(7,9,5)×210_iteration_{i}.png'), dpi=300, bbox_inches='tight')
+    plt.savefig(os.path.join(output_dir, f'L(14,7,4,1)×P(1,1,1)×30_iteration_{i}.png'), dpi=300, bbox_inches='tight')
     plt.close()
 
     print(f"已保存迭代 {i} 的对比图: {os.path.join(output_dir, f'iteration_{i}.png')}")
@@ -91,15 +91,15 @@ def visualize_multiple_algorithms(algorithm_data, output_dir):
 if __name__ == "__main__":
     # 定义三个算法的数据路径
 
-    # Instance = "Instance_L(14,7,4)_P(1,1,1)"
+    Instance = "Instance_L(14,7,4)_P(1,1,1)"
     # Instance = "Instance_L(14,7,4)_P(2,2,2)"
     # Instance = "Instance_L(14,7,4)_P(3,4,2)"
     # Instance = "Instance_L(14,7,4)_P(5,7,3)"
-    Instance = "Instance_L(14,7,4)_P(7,9,5)"
+    # Instance = "Instance_L(14,7,4)_P(7,9,5)"
 
     algorithm_files = {
         'SOA': 'population_history/SOA_' + Instance + '_run_1_population_history.npz',
-        'MISOA': 'population_history/ISOA_' + Instance + '_run_1_population_history.npz',
+        'CLSSOA': 'population_history/ISOA_' + Instance + '_run_1_population_history.npz',
         'SOA-PWLCM': 'population_history/ISOA-1_' + Instance + '_run_1_population_history.npz'
     }
 

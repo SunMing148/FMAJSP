@@ -7,7 +7,7 @@ from Decode import Decode
 # MWOA 这里并没涉及WOA算法
 class WOA():
     def __init__(self, Len_Chromo, Processing_time, J, M_num, kn, Job_serial_number, Special_Machine_ID):
-        self.Pop_size = 30  # 种群数量
+        self.Pop_size = 60  # 种群数量
 
         self.Max_Itertions = 300 # 最大迭代次数
         self.Len_Chromo = Len_Chromo
